@@ -12,6 +12,7 @@ const connect = () => mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true
 });
 const disconnect = () => mongoose.disconnect();
+
 const hasInvalidId = (id, next) => {
   if (!id.match(/^[0-9a-fA-F]{24}$/)) {
     const err = new Error('Invalid `id` parameter.');
@@ -116,14 +117,33 @@ router.post('/', (req, res, next) => {
 
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
 router.put('/:id', (req, res, next) => {
- 
+  const requiredFields = ['id', 'title'];
+  const updateFields = ['title', 'content'];
+  const id = req.params.id;
+  // Validate that `id` matches ID in req.body
+  if (!(id && req.body.id && id === req.body.id)) {
+    const err = new Error('Request body `id` and parameter `id` must be equivalent');
+    err.status = 400;
+    return next(err);
+  }
+  // Construct a note from updateFields
+  const updatedNote = constructNote(updateFields, req.body);
+  // Validate ID and required fields. If correct, send request.
+  return hasMissingField(requiredFields, req.body, next) ||
+    hasInvalidId(id, next) || connect()
+    .then(() => Note.findByIdAndUpdate(id, updatedNote), { new: true })
+    .then(response => {
+      // Send 404 if no response
+      if (!response) return next();
+      else return res.status(200).json(response);
+    })
+    .then(() => disconnect())
+    .catch(err => next(err));
 });
 
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
 router.delete('/:id', (req, res, next) => {
 
-  console.log('Delete a Note');
-  res.status(204).end();
 });
 
 module.exports = router;
