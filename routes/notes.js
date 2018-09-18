@@ -40,12 +40,26 @@ router.get('/', (req, res, next) => {
 
 /* ========== GET/READ A SINGLE ITEM ========== */
 router.get('/:id', (req, res, next) => {
-
-  console.log('Get a Note');
-  res.json({
-    id: 1,
-    title: 'Temp 1'
-  });
+  const id = req.params.id;
+  // Verify that ID is a valid ID
+  if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+    const err = new Error('Invalid `id` parameter.');
+    err.status = 400;
+    return next(err);
+  }
+  connect()
+    .then(() => {
+      return Note.findById(id);
+    })
+    .then(result => {
+      // Verify that a result is returned (ID exists in DB)
+      if (!result) return next();
+      else return res.status(200).json(result);
+    })
+    .then(() => {
+      return disconnect();
+    })
+    .catch(err => next(err));
 
 });
 
