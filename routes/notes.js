@@ -3,28 +3,49 @@
 const express = require('express');
 // Integrate mongoose
 const mongoose = require('mongoose');
-const { MONGODB_URI } = require('../config');
+const {
+  MONGODB_URI
+} = require('../config');
 const Note = require('../models/note');
-
+const connect = () => mongoose.connect(MONGODB_URI, {useNewUrlParser: true});
+const disconnect = () => mongoose.disconnect();
 const router = express.Router();
 
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/', (req, res, next) => {
 
-  console.log('Get All Notes');
-  res.json([
-    { id: 1, title: 'Temp 1' },
-    { id: 2, title: 'Temp 2' },
-    { id: 3, title: 'Temp 3' }
-  ]);
+  connect()
+    .then(() => {
+      const searchTerm = req.query.searchTerm;
+      let filter = {};
 
+      if (searchTerm) {
+        filter.title = {
+          $regex: new RegExp(searchTerm, 'gi')
+        };
+      }
+
+      return Note.find(filter).sort({
+        updatedAt: 'desc'
+      });
+    })
+    .then(results => {
+      res.status(200).json(results);
+    })
+    .then(() => {
+      return disconnect();
+    })
+    .catch(err => next(err));
 });
 
 /* ========== GET/READ A SINGLE ITEM ========== */
 router.get('/:id', (req, res, next) => {
 
   console.log('Get a Note');
-  res.json({ id: 1, title: 'Temp 1' });
+  res.json({
+    id: 1,
+    title: 'Temp 1'
+  });
 
 });
 
@@ -32,7 +53,10 @@ router.get('/:id', (req, res, next) => {
 router.post('/', (req, res, next) => {
 
   console.log('Create a Note');
-  res.location('path/to/new/document').status(201).json({ id: 2, title: 'Temp 2' });
+  res.location('path/to/new/document').status(201).json({
+    id: 2,
+    title: 'Temp 2'
+  });
 
 });
 
@@ -40,7 +64,10 @@ router.post('/', (req, res, next) => {
 router.put('/:id', (req, res, next) => {
 
   console.log('Update a Note');
-  res.json({ id: 1, title: 'Updated Temp 1' });
+  res.json({
+    id: 1,
+    title: 'Updated Temp 1'
+  });
 
 });
 
