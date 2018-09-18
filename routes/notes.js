@@ -1,15 +1,24 @@
-'use strict';
-
 const express = require('express');
+const router = express.Router();
 // Integrate mongoose
 const mongoose = require('mongoose');
 const {
   MONGODB_URI
 } = require('../config');
 const Note = require('../models/note');
+
+// HELPERS
 const connect = () => mongoose.connect(MONGODB_URI, {useNewUrlParser: true});
 const disconnect = () => mongoose.disconnect();
-const router = express.Router();
+const validateId = (id, next) => {
+  if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+    const err = new Error('Invalid `id` parameter.');
+    err.status = 400;
+    next(err);
+    return true;
+  }
+  return false;
+};
 
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/', (req, res, next) => {
@@ -41,13 +50,9 @@ router.get('/', (req, res, next) => {
 /* ========== GET/READ A SINGLE ITEM ========== */
 router.get('/:id', (req, res, next) => {
   const id = req.params.id;
-  // Verify that ID is a valid ID
-  if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-    const err = new Error('Invalid `id` parameter.');
-    err.status = 400;
-    return next(err);
-  }
-  connect()
+  // Verify that ID is a valid ID. If not, returns 400. 
+  // If it is, proceeds with DB call.
+  return validateId(id, next) || connect()
     .then(() => {
       return Note.findById(id);
     })
@@ -98,12 +103,6 @@ router.post('/', (req, res, next) => {
 
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
 router.put('/:id', (req, res, next) => {
-
-  console.log('Update a Note');
-  res.json({
-    id: 1,
-    title: 'Updated Temp 1'
-  });
 
 });
 
