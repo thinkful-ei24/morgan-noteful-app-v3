@@ -8,9 +8,11 @@ const {
 const Note = require('../models/note');
 
 // HELPERS
-const connect = () => mongoose.connect(MONGODB_URI, {useNewUrlParser: true});
+const connect = () => mongoose.connect(MONGODB_URI, {
+  useNewUrlParser: true
+});
 const disconnect = () => mongoose.disconnect();
-const validateId = (id, next) => {
+const hasInvalidId = (id, next) => {
   if (!id.match(/^[0-9a-fA-F]{24}$/)) {
     const err = new Error('Invalid `id` parameter.');
     err.status = 400;
@@ -18,6 +20,28 @@ const validateId = (id, next) => {
     return true;
   }
   return false;
+};
+
+const hasMissingField = (requiredFields, request, next) => {
+  for (const field of requiredFields) {
+    if (!(field in request)) {
+      const err = new Error(`Missing \`${field}\` in request body.`);
+      err.status = 400;
+      next(err);
+      return true;
+    }
+  }
+  return false;
+};
+
+const constructNote = (fields, request) => {
+  const result = {};
+  for (const field of fields) {
+    if (field in request) {
+      result[field] = request[field];
+    }
+  }
+  return result;
 };
 
 /* ========== GET/READ ALL ITEMS ========== */
@@ -52,7 +76,7 @@ router.get('/:id', (req, res, next) => {
   const id = req.params.id;
   // Verify that ID is a valid ID. If not, returns 400. 
   // If it is, proceeds with DB call.
-  return validateId(id, next) || connect()
+  return hasInvalidId(id, next) || connect()
     .then(() => {
       return Note.findById(id);
     })
@@ -71,22 +95,11 @@ router.get('/:id', (req, res, next) => {
 router.post('/', (req, res, next) => {
   const requiredFields = ['title'];
   const availableFields = ['title', 'content'];
-  // Validate that all required fields are present
-  for (const field of requiredFields) {
-    if (!(field in req.body)) {
-      const err = new Error(`Missing ${field} in request body.`);
-      err.status = 400;
-      next(err);
-    }
-  }
-  // Construct the new DB document
-  const newNote = {};
-  for (const field of availableFields) {
-    if (field in req.body) {
-      newNote[field] = req.body[field];
-    }
-  }
-  connect()
+
+  // Construct the new note
+  const newNote = constructNote(availableFields, req.body);
+
+  return hasMissingField(requiredFields, req.body, next) || connect()
     .then(() => {
       return Note.create(newNote);
     })
@@ -103,7 +116,7 @@ router.post('/', (req, res, next) => {
 
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
 router.put('/:id', (req, res, next) => {
-
+ 
 });
 
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
