@@ -1,6 +1,10 @@
 'use strict';
 
 const express = require('express');
+// Integrate mongoose
+const mongoose = require('mongoose');
+const { MONGODB_URI } = require('../config');
+const Note = require('../models/note');
 
 const router = express.Router();
 
