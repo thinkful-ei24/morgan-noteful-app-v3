@@ -48,22 +48,19 @@ router.get('/', (req, res, next) => {
   }
 
   return Note.find(filter).sort({ updatedAt: 'desc' })
-    .then(results => {
-      return res.status(200).json(results);
-    })
+    .then(dbResponse => res.status(200).json(dbResponse))
     .catch(err => next(err));
 });
 
 /* ========== GET/READ A SINGLE ITEM ========== */
 router.get('/:id', (req, res, next) => {
   const id = req.params.id;
-  // Verify that ID is a valid ID. If not, returns 400. 
-  // If it is, proceeds with DB call.
+  // Verify that ID is a valid ID. If it is, proceeds with DB call.
   return hasInvalidId(id, next) || Note.findById(id)
-    .then(result => {
+    .then(dbResponse => {
       // Verify that a result is returned (ID exists in DB)
-      if (!result) return next();
-      else return res.status(200).json(result);
+      if (!dbResponse) return next();
+      else return res.status(200).json(dbResponse);
     })
     .catch(err => next(err));
 });
@@ -72,18 +69,17 @@ router.get('/:id', (req, res, next) => {
 router.post('/', (req, res, next) => {
   const requiredFields = ['title'];
   const availableFields = ['title', 'content'];
-
   // Construct the new note
   const newNote = constructNote(availableFields, req.body);
-
+  // Verify that all required fields are present. If so, proceeds with DB call.
   return hasMissingField(requiredFields, req.body, next) || 
-  Note.create(newNote)
-    .then(result => {
-      // Verify that a result is returned (otherwise throw 500 error)
-      if (!result) throw new Error();
-      else return res.status(201).json(result);
-    })
-    .catch(err => next(err));
+    Note.create(newNote)
+      .then(dbResponse => {
+        // Verify that a result is returned (otherwise throw 500 error)
+        if (!dbResponse) throw new Error();
+        else return res.status(201).json(dbResponse);
+      })
+      .catch(err => next(err));
 });
 
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
@@ -103,17 +99,26 @@ router.put('/:id', (req, res, next) => {
   return hasMissingField(requiredFields, req.body, next) ||
     hasInvalidId(id, next) || 
     Note.findByIdAndUpdate(id, updatedNote, { new: true })
-      .then(response => {
-        // Send 404 if no response
-        if (!response) return next();
-        else return res.status(200).json(response);
+      .then(dbResponse => {
+        // Send 404 if no dbResponse
+        if (!dbResponse) return next();
+        else return res.status(200).json(dbResponse);
       })
       .catch(err => next(err));
 });
 
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
 router.delete('/:id', (req, res, next) => {
-
+  const id = req.params.id;
+  // Validate ID. If valid, send request.
+  return hasInvalidId(id, next) || 
+    Note.findByIdAndDelete(id)
+      .then(dbResponse => {
+        // Verify an item was deleted. If not, send 404.
+        if (!dbResponse) return next();
+        else return res.status(204).end();
+      })
+      .catch(err => next(err));
 });
 
 module.exports = router;
