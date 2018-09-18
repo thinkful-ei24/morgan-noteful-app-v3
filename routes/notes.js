@@ -36,6 +36,13 @@ const constructNote = (fields, request) => {
   return result;
 };
 
+const constructNewLocation = (req, res) => {
+  let url = req.originalUrl;
+  const lastIndex = url.length - 1;
+  if (url[lastIndex] === '/') url = url.slice(0, lastIndex);
+  return `${url}/${res.id}`;
+};
+
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/', (req, res, next) => {
   const searchTerm = req.query.searchTerm;
@@ -77,7 +84,7 @@ router.post('/', (req, res, next) => {
       .then(dbResponse => {
         // Verify that a result is returned (otherwise throw 500 error)
         if (!dbResponse) throw new Error();
-        else return res.status(201).json(dbResponse);
+        else return res.status(201).location(constructNewLocation(req, dbResponse)).json(dbResponse);
       })
       .catch(err => next(err));
 });
