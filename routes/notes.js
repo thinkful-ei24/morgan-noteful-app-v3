@@ -1,18 +1,9 @@
 const express = require('express');
 const router = express.Router();
 // Integrate mongoose
-const mongoose = require('mongoose');
-const {
-  MONGODB_URI
-} = require('../config');
 const Note = require('../models/note');
 
 // HELPERS
-const connect = () => mongoose.connect(MONGODB_URI, {
-  useNewUrlParser: true
-});
-const disconnect = () => mongoose.disconnect();
-
 const hasInvalidId = (id, next) => {
   if (!id.match(/^[0-9a-fA-F]{24}$/)) {
     const err = new Error('Invalid `id` parameter.');
@@ -47,27 +38,18 @@ const constructNote = (fields, request) => {
 
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/', (req, res, next) => {
+  const searchTerm = req.query.searchTerm;
+  let filter = {};
 
-  connect()
-    .then(() => {
-      const searchTerm = req.query.searchTerm;
-      let filter = {};
+  if (searchTerm) {
+    filter.title = {
+      $regex: new RegExp(searchTerm, 'gi')
+    };
+  }
 
-      if (searchTerm) {
-        filter.title = {
-          $regex: new RegExp(searchTerm, 'gi')
-        };
-      }
-
-      return Note.find(filter).sort({
-        updatedAt: 'desc'
-      });
-    })
+  return Note.find(filter).sort({ updatedAt: 'desc' })
     .then(results => {
-      res.status(200).json(results);
-    })
-    .then(() => {
-      return disconnect();
+      return res.status(200).json(results);
     })
     .catch(err => next(err));
 });
@@ -77,17 +59,11 @@ router.get('/:id', (req, res, next) => {
   const id = req.params.id;
   // Verify that ID is a valid ID. If not, returns 400. 
   // If it is, proceeds with DB call.
-  return hasInvalidId(id, next) || connect()
-    .then(() => {
-      return Note.findById(id);
-    })
+  return hasInvalidId(id, next) || Note.findById(id)
     .then(result => {
       // Verify that a result is returned (ID exists in DB)
       if (!result) return next();
       else return res.status(200).json(result);
-    })
-    .then(() => {
-      return disconnect();
     })
     .catch(err => next(err));
 });
@@ -100,17 +76,12 @@ router.post('/', (req, res, next) => {
   // Construct the new note
   const newNote = constructNote(availableFields, req.body);
 
-  return hasMissingField(requiredFields, req.body, next) || connect()
-    .then(() => {
-      return Note.create(newNote);
-    })
+  return hasMissingField(requiredFields, req.body, next) || 
+  Note.create(newNote)
     .then(result => {
       // Verify that a result is returned (otherwise throw 500 error)
       if (!result) throw new Error();
       else return res.status(201).json(result);
-    })
-    .then(() => {
-      return disconnect();
     })
     .catch(err => next(err));
 });
@@ -130,15 +101,14 @@ router.put('/:id', (req, res, next) => {
   const updatedNote = constructNote(updateFields, req.body);
   // Validate ID and required fields. If correct, send request.
   return hasMissingField(requiredFields, req.body, next) ||
-    hasInvalidId(id, next) || connect()
-    .then(() => Note.findByIdAndUpdate(id, updatedNote), { new: true })
-    .then(response => {
-      // Send 404 if no response
-      if (!response) return next();
-      else return res.status(200).json(response);
-    })
-    .then(() => disconnect())
-    .catch(err => next(err));
+    hasInvalidId(id, next) || 
+    Note.findByIdAndUpdate(id, updatedNote, { new: true })
+      .then(response => {
+        // Send 404 if no response
+        if (!response) return next();
+        else return res.status(200).json(response);
+      })
+      .catch(err => next(err));
 });
 
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */

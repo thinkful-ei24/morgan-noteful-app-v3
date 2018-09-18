@@ -4,6 +4,7 @@ const morgan = require('morgan');
 const mongoose = require('mongoose');
 // config
 const { PORT, MONGODB_URI } = require('./config');
+
 // routers
 const notesRouter = require('./routes/notes');
 
@@ -41,15 +42,6 @@ app.use((err, req, res, next) => {
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });
-
-// // Listen for incoming connections
-// if (process.env.NODE_ENV !== 'test') {
-//   app.listen(PORT, function () {
-//     console.info(`Server listening on ${this.address().port}`);
-//   }).on('error', err => {
-//     console.error(err);
-//   });
-// }
 
 // Connect to DB and Listen for incoming connections
 mongoose.connect(MONGODB_URI, { useNewUrlParser:true })
