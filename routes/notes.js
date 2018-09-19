@@ -3,29 +3,29 @@ const router = express.Router();
 // Integrate mongoose
 const Note = require('../models/note');
 
-// HELPERS
-const hasInvalidId = (id, next) => {
+// Validation Middleware
+const validateId = (req, res, next) => {
+  const id = req.params.id;
   if (!id.match(/^[0-9a-fA-F]{24}$/)) {
     const err = new Error('Invalid `id` parameter.');
     err.status = 400;
-    next(err);
-    return true;
+    return next(err);
   }
-  return false;
+  return next();
 };
 
-const hasMissingField = (requiredFields, request, next) => {
+const validateFields = (requiredFields) => (req, res, next) => {
   for (const field of requiredFields) {
-    if (!(field in request)) {
+    if (!(field in req.body)) {
       const err = new Error(`Missing \`${field}\` in request body.`);
       err.status = 400;
-      next(err);
-      return true;
+      return next(err);
     }
   }
-  return false;
+  return next();
 };
 
+// Helpers
 const constructNote = (fields, request) => {
   const result = {};
   for (const field of fields) {
@@ -47,23 +47,20 @@ const constructNewLocation = (req, res) => {
 router.get('/', (req, res, next) => {
   const searchTerm = req.query.searchTerm;
   let filter = {};
-
   if (searchTerm) {
     filter.title = {
       $regex: new RegExp(searchTerm, 'gi')
     };
   }
-
   return Note.find(filter).sort({ updatedAt: 'desc' })
     .then(dbResponse => res.status(200).json(dbResponse))
     .catch(err => next(err));
 });
 
 /* ========== GET/READ A SINGLE ITEM ========== */
-router.get('/:id', (req, res, next) => {
+router.get('/:id', validateId, (req, res, next) => {
   const id = req.params.id;
-  // Verify that ID is a valid ID. If it is, proceeds with DB call.
-  return hasInvalidId(id, next) || Note.findById(id)
+  return Note.findById(id)
     .then(dbResponse => {
       // Verify that a result is returned (ID exists in DB)
       if (!dbResponse) return next();
@@ -73,26 +70,21 @@ router.get('/:id', (req, res, next) => {
 });
 
 /* ========== POST/CREATE AN ITEM ========== */
-router.post('/', (req, res, next) => {
-  const requiredFields = ['title'];
+router.post('/', validateFields(['title']), (req, res, next) => {
   const availableFields = ['title', 'content'];
   // Construct the new note
   const newNote = constructNote(availableFields, req.body);
-  // Verify that all required fields are present. If so, proceeds with DB call.
-  return hasMissingField(requiredFields, req.body, next) || 
-    Note.create(newNote)
-      .then(dbResponse => {
-        // Verify that a result is returned (otherwise throw 500 error)
-        if (!dbResponse) throw new Error();
-        else return res.status(201).location(constructNewLocation(req, dbResponse)).json(dbResponse);
-      })
-      .catch(err => next(err));
+  return Note.create(newNote)
+    .then(dbResponse => {
+      // Verify that a result is returned (otherwise throw 500 error)
+      if (!dbResponse) throw new Error();
+      else return res.status(201).location(constructNewLocation(req, dbResponse)).json(dbResponse);
+    })
+    .catch(err => next(err));
 });
 
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
-router.put('/:id', (req, res, next) => {
-  const requiredFields = ['id', 'title'];
-  const updateFields = ['title', 'content'];
+router.put('/:id', validateId, validateFields(['id', 'title']), (req, res, next) => {
   const id = req.params.id;
   // Validate that `id` matches ID in req.body
   if (!(id && req.body.id && id === req.body.id)) {
@@ -100,32 +92,29 @@ router.put('/:id', (req, res, next) => {
     err.status = 400;
     return next(err);
   }
+  const updateFields = ['title', 'content'];
   // Construct a note from updateFields
   const updatedNote = constructNote(updateFields, req.body);
   // Validate ID and required fields. If correct, send request.
-  return hasMissingField(requiredFields, req.body, next) ||
-    hasInvalidId(id, next) || 
-    Note.findByIdAndUpdate(id, updatedNote, { new: true })
-      .then(dbResponse => {
-        // Send 404 if no dbResponse
-        if (!dbResponse) return next();
-        else return res.status(200).json(dbResponse);
-      })
-      .catch(err => next(err));
+  return Note.findByIdAndUpdate(id, updatedNote, { new: true })
+    .then(dbResponse => {
+      // Send 404 if no dbResponse
+      if (!dbResponse) return next();
+      else return res.status(200).json(dbResponse);
+    })
+    .catch(err => next(err));
 });
 
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
-router.delete('/:id', (req, res, next) => {
+router.delete('/:id', validateId, (req, res, next) => {
   const id = req.params.id;
-  // Validate ID. If valid, send request.
-  return hasInvalidId(id, next) || 
-    Note.findByIdAndDelete(id)
-      .then(dbResponse => {
-        // Verify an item was deleted. If not, send 404.
-        if (!dbResponse) return next();
-        else return res.status(204).end();
-      })
-      .catch(err => next(err));
+  return Note.findByIdAndDelete(id)
+    .then(dbResponse => {
+      // Verify an item was deleted. If not, send 404.
+      if (!dbResponse) return next();
+      else return res.status(204).end();
+    })
+    .catch(err => next(err));
 });
 
 module.exports = router;
