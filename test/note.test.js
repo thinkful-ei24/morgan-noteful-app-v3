@@ -19,8 +19,8 @@ chai.use(chaiHttp);
 describe('Note Router Tests', () => {
   before(function() {
     return mongoose.connect(TEST_MONGODB_URI, {
-      useNewUrlParser: true
-    })
+        useNewUrlParser: true
+      })
       .then(() => mongoose.connection.db.dropDatabase());
   });
 
@@ -49,8 +49,7 @@ describe('Note Router Tests', () => {
         for (const item of response) {
           expect(item).to.have.keys(expectedFields);
         }
-      }
-      else expect(response).to.have.keys(expectedFields);
+      } else expect(response).to.have.keys(expectedFields);
     }
   };
   const expectedFields = ['id', 'title', 'content', 'createdAt', 'updatedAt'];
@@ -61,9 +60,9 @@ describe('Note Router Tests', () => {
       // 1) Call the database **and** the API
       // 2) Wait for both promises to resolve using `Promise.all`
       return Promise.all([
-        Note.find(),
-        chai.request(app).get('/api/notes')
-      ])
+          Note.find(),
+          chai.request(app).get('/api/notes')
+        ])
         // 3) then compare database results to API response
         .then(([data, res]) => {
           expect(res).to.have.status(200);
@@ -81,14 +80,14 @@ describe('Note Router Tests', () => {
     });
 
     it('should be able to search for notes (case-insensitive)', () => {
-      return req('get', '/?searchTerm=GAGA') 
+      return req('get', '/?searchTerm=GAGA')
         .then(res => {
           expect(res.body[0].title).to.equal('7 things Lady Gaga has in common with cats');
         });
     });
 
     it('should return an empty array with an invalid search', () => {
-      return req('get', '/?searchTerm=INVALIDDDDDDD') 
+      return req('get', '/?searchTerm=INVALIDDDDDDD')
         .then(res => {
           expect(res.body).to.deep.equal([]);
         });
@@ -187,7 +186,10 @@ describe('Note Router Tests', () => {
 
     it('should return an object with the expected fields', () => {
       return req('post', '/')
-        .send({title: 'Testing title here!', content: 'Who needs it?'})
+        .send({
+          title: 'Testing title here!',
+          content: 'Who needs it?'
+        })
         .then(res => {
           expect(res.body).to.be.an('object');
           validateFields(res, expectedFields);
@@ -196,7 +198,9 @@ describe('Note Router Tests', () => {
 
     it('should require a title in the request body', () => {
       return req('post', '/')
-        .send({content: 'Who needs it?'})
+        .send({
+          content: 'Who needs it?'
+        })
         .then(res => {
           expect(res).to.have.status(400);
         });
@@ -204,7 +208,10 @@ describe('Note Router Tests', () => {
 
     it('should return a valid location header with new ID', () => {
       req('post', '/')
-        .send({title:'Another test here', content: 'Who needs it?'})
+        .send({
+          title: 'Another test here',
+          content: 'Who needs it?'
+        })
         .then(res => {
           expect(res).to.have.header('Location', /\/api\/notes\/[0-9a-fA-F]{24}/);
         });
@@ -213,14 +220,18 @@ describe('Note Router Tests', () => {
   });
 
   describe('PUT /api/notes/:id', () => {
- 
+
     it('should update a note by an `id`', () => {
       let item;
       return Note.findOne()
         .then(res => {
           item = res;
           return req('put', `/${item.id}`)
-            .send({id: item.id, title: 'Test title!', content: 'hello world!'});
+            .send({
+              id: item.id,
+              title: 'Test title!',
+              content: 'hello world!'
+            });
         })
         .then(res => {
           validateFields(res, expectedFields);
@@ -228,7 +239,7 @@ describe('Note Router Tests', () => {
           expect(res.body.title).to.equal('Test title!');
           expect(res.body.content).to.equal('hello world!');
         });
-    });   
+    });
 
     it('should be able to update a single field', () => {
       let item;
@@ -236,7 +247,10 @@ describe('Note Router Tests', () => {
         .then(res => {
           item = res;
           return req('put', `/${item.id}`)
-            .send({id: item.id, content: 'hello world!'});
+            .send({
+              id: item.id,
+              content: 'hello world!'
+            });
         })
         .then(res => {
           validateFields(res, expectedFields);
@@ -244,10 +258,14 @@ describe('Note Router Tests', () => {
           expect(res.body.content).to.equal('hello world!');
         });
     });
-    
+
     it('should require a valid id', () => {
       return req('put', '/INVALIDIDHERE')
-        .send({id: 'INVALIDIDHERE', title: 'HEllo!', content: 'hello world!'})
+        .send({
+          id: 'INVALIDIDHERE',
+          title: 'HEllo!',
+          content: 'hello world!'
+        })
         .then(res => {
           expect(res).to.have.status(400);
         });
@@ -255,7 +273,11 @@ describe('Note Router Tests', () => {
 
     it('should 404 if the id is valid but does not exist in the database', () => {
       return req('put', '/111111111111111111111111')
-        .send({id: '111111111111111111111111', title: 'HEllo!', content: 'hello world!'})
+        .send({
+          id: '111111111111111111111111',
+          title: 'HEllo!',
+          content: 'hello world!'
+        })
         .then(res => {
           expect(res).to.have.status(404);
         });
@@ -263,7 +285,10 @@ describe('Note Router Tests', () => {
 
     it('should require an id in request body', () => {
       return req('put', '/000000000000000000000000')
-        .send({title: 'HEllo!', content: 'hello world!'})
+        .send({
+          title: 'HEllo!',
+          content: 'hello world!'
+        })
         .then(res => {
           expect(res).to.have.status(400);
         });
@@ -271,7 +296,11 @@ describe('Note Router Tests', () => {
 
     it('should require a matching id in both the request query and body', () => {
       return req('put', '/111111111111111111111111')
-        .send({id: '111111111111111111111110', title: 'HEllo!', content: 'hello world!'})
+        .send({
+          id: '111111111111111111111110',
+          title: 'HEllo!',
+          content: 'hello world!'
+        })
         .then(res => {
           expect(res).to.have.status(400);
         });
@@ -281,11 +310,27 @@ describe('Note Router Tests', () => {
 
   describe('DELETE /api/notes/:id', () => {
 
-    it('should delete a note by an `id`', () => {});
+    it('should delete a note by an `id`', () => {
+      return req('delete', '/000000000000000000000000')
+        .then(res => {
+          expect(res).to.have.status(204);
+        });
+    });
 
-    it('should require a valid id', () => {});
+    it('should require a valid id', () => {
+      return req('delete', '/00000')
+        .then(res => {
+          expect(res).to.have.status(400);
+        });
 
-    it('should 404 if the id is valid but does not exist in the database', () => {});
+    });
+
+    it('should 404 if the id is valid but does not exist in the database', () => {
+      return req('delete', '/100000000000000000000000')
+        .then(res => {
+          expect(res).to.have.status(404);
+        });
+    });
 
   });
 
