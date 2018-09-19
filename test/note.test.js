@@ -35,6 +35,13 @@ describe('Note Router Tests', () => {
   after(function() {
     return mongoose.disconnect();
   });
+
+  const req = (method, endpoint) => {
+    method = method.toLowerCase();
+    return chai.request(app)[method]('/api/notes' + endpoint);
+  };
+
+
   const validateFields = (res, expectedFields) => {
     const response = res.body;
     if (typeof response === 'object') {
@@ -67,7 +74,7 @@ describe('Note Router Tests', () => {
     });
 
     it('should return the correct fields for each item', () => {
-      return chai.request(app).get('/api/notes')
+      return req('get', '/')
         .then(res => {
           validateFields(res, expectedFields);
         });
@@ -177,8 +184,6 @@ describe('Note Router Tests', () => {
           expect(new Date(res.body.updatedAt)).to.eql(data.updatedAt);
         });
     });
-
-    // Validate fields
 
     it('should require a title in the request body', () => {});
 
