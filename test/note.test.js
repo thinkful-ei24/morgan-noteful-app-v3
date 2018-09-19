@@ -185,9 +185,30 @@ describe('Note Router Tests', () => {
         });
     });
 
-    it('should require a title in the request body', () => {});
+    it('should return an object with the expected fields', () => {
+      req('post', '/')
+        .send({title: 'Testing title here!', content: 'Who needs it?'})
+        .then(res => {
+          expect(res.body).to.be.an.object;
+          validateFields(res, expectedFields);
+        });
+    });
 
-    it('should return a valid location header with new ID', () => {});
+    it('should require a title in the request body', () => {
+      req('post', '/')
+        .send({content: 'Who needs it?'})
+        .then(res => {
+          expect(res).to.have.status(400);
+        });
+    });
+
+    it('should return a valid location header with new ID', () => {
+      req('post', '/')
+        .send({title:'Another test here', content: 'Who needs it?'})
+        .then(res => {
+          expect(res).to.have.header('Location', /\/api\/notes\/[0-9a-fA-F]{24}/);
+        });
+    });
 
   });
 
