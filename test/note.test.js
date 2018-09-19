@@ -116,11 +116,33 @@ describe('Note Router Tests', () => {
         });
     });
 
-    // Should have valid fields
+    it('should return the expected fields', () => {
+      // 1) First, call the database
+      let data;
+      return Note.findOne()
+        .then(_data => {
+          data = _data;
+          // 2) then call the API with the ID
+          return chai.request(app).get(`/api/notes/${data.id}`);
+        })
+        .then((res) => {
+          validateFields(res, expectedFields);
+        });
+    });
 
-    it('should make sure the `id` parameter is a valid ID', () => {});
+    it('should make sure the `id` parameter is a valid ID', () => {
+      return chai.request(app).get('/api/notes/INVALIDIDHERE')
+        .then(res => {
+          expect(res).to.have.status(400);
+        });
+    });
 
-    it('should 404 if the ID is valid but does not exist in the database', () => {});
+    it('should 404 if the ID is valid but does not exist in the database', () => {
+      return chai.request(app).get('/api/notes/111111111111111111111111')
+        .then(res => {
+          expect(res).to.have.status(404);
+        });
+    });
 
   });
 
