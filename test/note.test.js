@@ -81,14 +81,14 @@ describe('Note Router Tests', () => {
     });
 
     it('should be able to search for notes (case-insensitive)', () => {
-      req('get', '?searchTerm=GAGA') 
+      return req('get', '/?searchTerm=GAGA') 
         .then(res => {
-          expect(res.body.title).to.be('7 things Lady Gaga has in common with cats');
+          expect(res.body[0].title).to.equal('7 things Lady Gaga has in common with cats');
         });
     });
 
     it('should return an empty array with an invalid search', () => {
-      req('get', '?searchTerm=INVALIDDDDDDD') 
+      return req('get', '/?searchTerm=INVALIDDDDDDD') 
         .then(res => {
           expect(res.body).to.deep.equal([]);
         });
@@ -186,16 +186,16 @@ describe('Note Router Tests', () => {
     });
 
     it('should return an object with the expected fields', () => {
-      req('post', '/')
+      return req('post', '/')
         .send({title: 'Testing title here!', content: 'Who needs it?'})
         .then(res => {
-          expect(res.body).to.be.an.object;
+          expect(res.body).to.be.an('object');
           validateFields(res, expectedFields);
         });
     });
 
     it('should require a title in the request body', () => {
-      req('post', '/')
+      return req('post', '/')
         .send({content: 'Who needs it?'})
         .then(res => {
           expect(res).to.have.status(400);
@@ -213,18 +213,69 @@ describe('Note Router Tests', () => {
   });
 
   describe('PUT /api/notes/:id', () => {
+ 
+    it('should update a note by an `id`', () => {
+      let item;
+      return Note.findOne()
+        .then(res => {
+          item = res;
+          return req('put', `/${item.id}`)
+            .send({id: item.id, title: 'Test title!', content: 'hello world!'});
+        })
+        .then(res => {
+          validateFields(res, expectedFields);
+          expect(res.body.id).to.equal(item.id);
+          expect(res.body.title).to.equal('Test title!');
+          expect(res.body.content).to.equal('hello world!');
+        });
+    });   
 
-    it('should update a note by an `id`', () => {});
-
-    it('should be able to update a single field', () => {});
+    it('should be able to update a single field', () => {
+      let item;
+      return Note.findOne()
+        .then(res => {
+          item = res;
+          return req('put', `/${item.id}`)
+            .send({id: item.id, content: 'hello world!'});
+        })
+        .then(res => {
+          validateFields(res, expectedFields);
+          expect(res.body.id).to.equal(item.id);
+          expect(res.body.content).to.equal('hello world!');
+        });
+    });
     
-    it('should require a valid id', () => {});
+    it('should require a valid id', () => {
+      return req('put', '/INVALIDIDHERE')
+        .send({id: 'INVALIDIDHERE', title: 'HEllo!', content: 'hello world!'})
+        .then(res => {
+          expect(res).to.have.status(400);
+        });
+    });
 
-    it('should 404 if the id is valid but does not exist in the database', () => {});
+    it('should 404 if the id is valid but does not exist in the database', () => {
+      return req('put', '/111111111111111111111111')
+        .send({id: '111111111111111111111111', title: 'HEllo!', content: 'hello world!'})
+        .then(res => {
+          expect(res).to.have.status(404);
+        });
+    });
 
-    it('should require an id in request body', () => {});
+    it('should require an id in request body', () => {
+      return req('put', '/000000000000000000000000')
+        .send({title: 'HEllo!', content: 'hello world!'})
+        .then(res => {
+          expect(res).to.have.status(400);
+        });
+    });
 
-    it('should require a matching id in both the request query and body', () => {});
+    it('should require a matching id in both the request query and body', () => {
+      return req('put', '/111111111111111111111111')
+        .send({id: '111111111111111111111110', title: 'HEllo!', content: 'hello world!'})
+        .then(res => {
+          expect(res).to.have.status(400);
+        });
+    });
 
   });
 
