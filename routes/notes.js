@@ -84,11 +84,11 @@ router.post('/', validateFields(['title']), (req, res, next) => {
 });
 
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
-router.put('/:id', validateId, validateFields(['id', 'title']), (req, res, next) => {
+router.put('/:id', validateId, validateFields(['id']), (req, res, next) => {
   const id = req.params.id;
   // Validate that `id` matches ID in req.body
   if (!(id && req.body.id && id === req.body.id)) {
-    const err = new Error('Request body `id` and parameter `id` must be equivalent');
+    const err = new Error('Request body `id` and parameter `id` must be equivalent.');
     err.status = 400;
     return next(err);
   }
