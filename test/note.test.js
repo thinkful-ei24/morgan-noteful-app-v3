@@ -81,14 +81,14 @@ describe('Note Router Tests', () => {
     });
 
     it('should be able to search for notes (case-insensitive)', () => {
-      chai.request(app).get('/api/notes?searchTerm=GAGA') 
+      req('get', '?searchTerm=GAGA') 
         .then(res => {
           expect(res.body.title).to.be('7 things Lady Gaga has in common with cats');
         });
     });
 
     it('should return an empty array with an invalid search', () => {
-      chai.request(app).get('/api/notes?searchTerm=INVALIDDDDDDD') 
+      req('get', '?searchTerm=INVALIDDDDDDD') 
         .then(res => {
           expect(res.body).to.deep.equal([]);
         });
@@ -130,7 +130,7 @@ describe('Note Router Tests', () => {
         .then(_data => {
           data = _data;
           // 2) then call the API with the ID
-          return chai.request(app).get(`/api/notes/${data.id}`);
+          return req('get', `/${data.id}`);
         })
         .then((res) => {
           validateFields(res, expectedFields);
@@ -138,14 +138,14 @@ describe('Note Router Tests', () => {
     });
 
     it('should make sure the `id` parameter is a valid ID', () => {
-      return chai.request(app).get('/api/notes/INVALIDIDHERE')
+      return req('get', '/INVALIDIDHERE')
         .then(res => {
           expect(res).to.have.status(400);
         });
     });
 
     it('should 404 if the ID is valid but does not exist in the database', () => {
-      return chai.request(app).get('/api/notes/111111111111111111111111')
+      return req('get', '/111111111111111111111111')
         .then(res => {
           expect(res).to.have.status(404);
         });
