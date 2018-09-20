@@ -19,4 +19,11 @@ const validateFields = (requiredFields) => (req, res, next) => {
   return next();
 };
 
-module.exports = {validateFields, validateId};
+const constructLocationHeader = (req, res) => {
+  let url = req.originalUrl;
+  const lastIndex = url.length - 1;
+  if (url[lastIndex] === '/') url = url.slice(0, lastIndex);
+  return `${url}/${res.id}`;
+};
+
+module.exports = {validateFields, validateId, constructLocationHeader};
