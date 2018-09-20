@@ -138,156 +138,131 @@ describe('Folder Router Tests', () => {
 
   });
 
-  // describe('POST /api/folders', function() {
-  //   it('should create and return a new item when provided valid data', function() {
-  //     const newItem = {
-  //       name: 'TestFolder'
-  //     };
+  describe('POST /api/folders', function() {
+    
+    const newItem = {
+      name: 'TestFolder'
+    };
+    
+    it('should create and return a new item when provided valid data', function() {
+      let res;
+      // 1) First, call the API
+      return req('post', '/')
+        .send(newItem)
+        .then(function(_res) {
+          res = _res;
+          expect(res).to.have.status(201);
+          expect(res).to.have.header('location');
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          validateFields(res, expectedFields);
+          // 2) then call the database
+          return Folder.findById(res.body.id);
+        })
+        // 3) then compare the API response to the database results
+        .then(data => {
+          expect(res.body.id).to.equal(data.id);
+        });
+    });
 
-  //     let res;
-  //     // 1) First, call the API
-  //     return chai.request(app)
-  //       .post('/api/folders')
-  //       .send(newItem)
-  //       .then(function(_res) {
-  //         res = _res;
-  //         expect(res).to.have.status(201);
-  //         expect(res).to.have.header('location');
-  //         expect(res).to.be.json;
-  //         expect(res.body).to.be.a('object');
-  //         validateFields(res, expectedFields);
-  //         // 2) then call the database
-  //         return Folder.findById(res.body.id);
-  //       })
-  //       // 3) then compare the API response to the database results
-  //       .then(data => {
-  //         expect(res.body.id).to.equal(data.id);
-  //       });
-  //   });
+    it('should return an object with the expected fields', () => {
+      return req('post', '/')
+        .send(newItem)
+        .then(res => {
+          expect(res.body).to.be.an('object');
+          validateFields(res, expectedFields);
+        });
+    });
 
-  //   it('should return an object with the expected fields', () => {
-  //     return req('post', '/')
-  //       .send({
-  //         title: 'Testing title here!',
-  //         content: 'Who needs it?'
-  //       })
-  //       .then(res => {
-  //         expect(res.body).to.be.an('object');
-  //         validateFields(res, expectedFields);
-  //       });
-  //   });
+    // it('should catch duplicate key errors', () => {
+    //   let item;
+    //   return Folder.findOne()
+    //     .then(_data => {
+    //       item = _data;
+    //       return chai.request(app).post('/api/folders/')
+    //         .send({name: item.name});
+    //     })
+    //     .then((res) => {
+    //       console.log(res.body);
+    //       expect(res).to.have.status(400);
+    //     });
+    // });
 
-  //   it('should catch duplicate key errors', () => {
-  //     return req('post', '/')
-  //       .send({
-  //         title: 'TestFolder'
-  //       })
-  //       .then(res => {
-  //         expect(res).to.have.status(400);
-  //       });
-  //   });
+    it('should return a valid location header with new ID', () => {
+      req('post', '/')
+        .send(newItem)
+        .then(res => {
+          expect(res).to.have.header('Location', /\/api\/folders\/[0-9a-fA-F]{24}/);
+        });
+    });
 
-  //   it('should return a valid location header with new ID', () => {
-  //     req('post', '/')
-  //       .send({
-  //         title: 'Another test here',
-  //         content: 'Who needs it?'
-  //       })
-  //       .then(res => {
-  //         expect(res).to.have.header('Location', /\/api\/folders\/[0-9a-fA-F]{24}/);
-  //       });
-  //   });
+  });
 
-  // });
+  describe('PUT /api/folders/:id', () => {
 
-  // describe('PUT /api/folders/:id', () => {
+    it('should update a folder by an `id`', () => {
+      let item;
+      return Folder.findOne()
+        .then(res => {
+          item = res;
+          return req('put', `/${item.id}`)
+            .send({
+              id: item.id,
+              name: 'testFolder'
+            });
+        })
+        .then(res => {
+          validateFields(res, expectedFields);
+          expect(res.body.id).to.equal(item.id);
+          expect(res.body.name).to.equal('testFolder');
+        });
+    });
 
-  //   it('should update a folder by an `id`', () => {
-  //     let item;
-  //     return Folder.findOne()
-  //       .then(res => {
-  //         item = res;
-  //         return req('put', `/${item.id}`)
-  //           .send({
-  //             id: item.id,
-  //             title: 'Test title!',
-  //             content: 'hello world!'
-  //           });
-  //       })
-  //       .then(res => {
-  //         validateFields(res, expectedFields);
-  //         expect(res.body.id).to.equal(item.id);
-  //         expect(res.body.title).to.equal('Test title!');
-  //         expect(res.body.content).to.equal('hello world!');
-  //       });
-  //   });
+    it('should require a valid id', () => {
+      return req('put', '/INVALIDIDHERE')
+        .send({
+          id: 'INVALIDIDHERE',
+          title: 'HEllo!',
+          content: 'hello world!'
+        })
+        .then(res => {
+          expect(res).to.have.status(400);
+        });
+    });
 
-  //   it('should be able to update a single field', () => {
-  //     let item;
-  //     return Folder.findOne()
-  //       .then(res => {
-  //         item = res;
-  //         return req('put', `/${item.id}`)
-  //           .send({
-  //             id: item.id,
-  //             content: 'hello world!'
-  //           });
-  //       })
-  //       .then(res => {
-  //         validateFields(res, expectedFields);
-  //         expect(res.body.id).to.equal(item.id);
-  //         expect(res.body.content).to.equal('hello world!');
-  //       });
-  //   });
+    it('should 404 if the id is valid but does not exist in the database', () => {
+      return req('put', '/faaaaaaaaaaaaaaaaaaaaaaa')
+        .send({
+          id: 'faaaaaaaaaaaaaaaaaaaaaaa',
+          name: 'Hello'
+        })
+        .then(res => {
+          expect(res).to.have.status(404);
+        });
+    });
 
-  //   it('should require a valid id', () => {
-  //     return req('put', '/INVALIDIDHERE')
-  //       .send({
-  //         id: 'INVALIDIDHERE',
-  //         title: 'HEllo!',
-  //         content: 'hello world!'
-  //       })
-  //       .then(res => {
-  //         expect(res).to.have.status(400);
-  //       });
-  //   });
+    it('should require an id in request body', () => {
+      return req('put', '/000000000000000000000000')
+        .send({
+          name: 'Test'
+        })
+        .then(res => {
+          expect(res).to.have.status(400);
+        });
+    });
 
-  //   it('should 404 if the id is valid but does not exist in the database', () => {
-  //     return req('put', '/faaaaaaaaaaaaaaaaaaaaaaa')
-  //       .send({
-  //         id: 'faaaaaaaaaaaaaaaaaaaaaaa',
-  //         title: 'HEllo!',
-  //         content: 'hello world!'
-  //       })
-  //       .then(res => {
-  //         expect(res).to.have.status(404);
-  //       });
-  //   });
+    it('should require a matching id in both the request query and body', () => {
+      return req('put', '/faaaaaaaaaaaaaaaaaaaaaaa')
+        .send({
+          id: '111111111111111111111110',
+          name: 'Hello'
+        })
+        .then(res => {
+          expect(res).to.have.status(400);
+        });
+    });
 
-  //   it('should require an id in request body', () => {
-  //     return req('put', '/000000000000000000000000')
-  //       .send({
-  //         title: 'HEllo!',
-  //         content: 'hello world!'
-  //       })
-  //       .then(res => {
-  //         expect(res).to.have.status(400);
-  //       });
-  //   });
-
-  //   it('should require a matching id in both the request query and body', () => {
-  //     return req('put', '/faaaaaaaaaaaaaaaaaaaaaaa')
-  //       .send({
-  //         id: '111111111111111111111110',
-  //         title: 'HEllo!',
-  //         content: 'hello world!'
-  //       })
-  //       .then(res => {
-  //         expect(res).to.have.status(400);
-  //       });
-  //   });
-
-  // });
+  });
 
   // describe('DELETE /api/folders/:id', () => {
 

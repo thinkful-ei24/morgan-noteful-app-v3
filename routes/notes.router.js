@@ -3,7 +3,7 @@ const router = express.Router();
 // Integrate mongoose
 const Note = require('../models/note');
 // Validation Middleware
-const { validateId, validateFields } = require('../utils/validate');
+const { validateId, validateFields, constructLocationHeader } = require('../utils/route-middleware');
 
 // Helpers
 const constructNote = (fields, request) => {
@@ -14,13 +14,6 @@ const constructNote = (fields, request) => {
     }
   }
   return result;
-};
-
-const constructNewLocation = (req, res) => {
-  let url = req.originalUrl;
-  const lastIndex = url.length - 1;
-  if (url[lastIndex] === '/') url = url.slice(0, lastIndex);
-  return `${url}/${res.id}`;
 };
 
 /* ========== GET/READ ALL ITEMS ========== */
@@ -58,7 +51,7 @@ router.post('/', validateFields(['title']), (req, res, next) => {
     .then(dbResponse => {
       // Verify that a result is returned (otherwise throw 500 error)
       if (!dbResponse) throw new Error();
-      else return res.status(201).location(constructNewLocation(req, dbResponse)).json(dbResponse);
+      else return res.status(201).location(constructLocationHeader(req, dbResponse)).json(dbResponse);
     })
     .catch(err => next(err));
 });
