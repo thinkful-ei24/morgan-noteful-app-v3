@@ -7,7 +7,11 @@ const { validateId, validateFields } = require('../utils/validate');
 
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/', (req, res, next) => {
-  
+  return Folder.find()
+    .sort('name')
+    .then(dbRes => {
+      return res.status(200).json(dbRes);
+    });
 });
 
 /* ========== GET/READ A SINGLE ITEM ========== */

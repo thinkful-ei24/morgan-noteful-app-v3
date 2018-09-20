@@ -52,7 +52,7 @@ describe('Folder Router Tests', () => {
       } else expect(response).to.have.keys(expectedFields);
     }
   };
-  const expectedFields = [];
+  const expectedFields = ['id', 'name', 'createdAt', 'updatedAt'];
 
   describe('GET /api/folders', function() {
 
@@ -60,26 +60,25 @@ describe('Folder Router Tests', () => {
       // 1) Call the database **and** the API
       // 2) Wait for both promises to resolve using `Promise.all`
       return Promise.all([
-          Folder.find(),
-          chai.request(app).get('/api/folders')
-        ])
+        Folder.find(),
+        req('get', '/')
+      ])
         // 3) then compare database results to API response
         .then(([data, res]) => {
           expect(res).to.have.status(200);
           expect(res).to.be.json;
           expect(res.body).to.be.a('array');
           expect(res.body).to.have.length(data.length);
-        });
-    });
-
-    it('should return the correct fields for each item', () => {
-      return req('get', '/')
-        .then(res => {
           validateFields(res, expectedFields);
         });
     });
 
-    it('should sort folders by name', () => {});
+    it('should sort folders by name', () => {
+      return req('get', '/')
+        .then((dbRes) => {
+          expect(dbRes.body.map(item => item.name)).to.eql(['Archive', 'Drafts', 'Personal', 'Work']);
+        });
+    });
 
   });
 
