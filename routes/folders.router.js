@@ -16,7 +16,12 @@ router.get('/', (req, res, next) => {
 
 /* ========== GET/READ A SINGLE ITEM ========== */
 router.get('/:id', validateId, (req, res, next) => {
-  
+  const id = req.params.id;
+  return Folder.findById(id)
+    .then(dbRes => {
+      if (!dbRes) return next();
+      else return res.status(200).json(dbRes);
+    });
 });
 
 /* ========== POST/CREATE AN ITEM ========== */

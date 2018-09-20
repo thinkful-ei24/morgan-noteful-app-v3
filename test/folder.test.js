@@ -82,62 +82,61 @@ describe('Folder Router Tests', () => {
 
   });
 
-  // describe('GET /api/folders/:id', function() {
+  describe('GET /api/folders/:id', function() {
 
-  //   it('should return correct folder by the `id` parameter', function() {
-  //     let data;
-  //     // 1) First, call the database
-  //     return Folder.findOne()
-  //       .then(_data => {
-  //         data = _data;
-  //         // 2) then call the API with the ID
-  //         return chai.request(app).get(`/api/folders/${data.id}`);
-  //       })
-  //       .then((res) => {
-  //         expect(res).to.have.status(200);
-  //         expect(res).to.be.json;
+    it('should return correct folder by the `id` parameter', function() {
+      let data;
+      // 1) First, call the database
+      return Folder.findOne()
+        .then(_data => {
+          data = _data;
+          // 2) then call the API with the ID
+          return req('get', `/${data.id}`);
+        })
+        .then((res) => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
 
-  //         expect(res.body).to.be.an('object');
-  //         validateFields(res, expectedFields);
+          expect(res.body).to.be.an('object');
+          validateFields(res, expectedFields);
 
-  //         // 3) then compare database results to API response
-  //         expect(res.body.id).to.equal(data.id);
-  //         expect(res.body.title).to.equal(data.title);
-  //         expect(res.body.content).to.equal(data.content);
-  //         expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
-  //         expect(new Date(res.body.updatedAt)).to.eql(data.updatedAt);
-  //       });
-  //   });
+          // 3) then compare database results to API response
+          expect(res.body.id).to.equal(data.id);
+          expect(res.body.name).to.equal(data.name);
+          expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
+          expect(new Date(res.body.updatedAt)).to.eql(data.updatedAt);
+        });
+    });
 
-  //   it('should return the expected fields', () => {
-  //     // 1) First, call the database
-  //     let data;
-  //     return Folder.findOne()
-  //       .then(_data => {
-  //         data = _data;
-  //         // 2) then call the API with the ID
-  //         return req('get', `/${data.id}`);
-  //       })
-  //       .then((res) => {
-  //         validateFields(res, expectedFields);
-  //       });
-  //   });
+    it('should return the expected fields', () => {
+      // 1) First, call the database
+      let data;
+      return Folder.findOne()
+        .then(_data => {
+          data = _data;
+          // 2) then call the API with the ID
+          return req('get', `/${data.id}`);
+        })
+        .then((res) => {
+          validateFields(res, expectedFields);
+        });
+    });
 
-  //   it('should make sure the `id` parameter is a valid ID', () => {
-  //     return req('get', '/INVALIDIDHERE')
-  //       .then(res => {
-  //         expect(res).to.have.status(400);
-  //       });
-  //   });
+    it('should make sure the `id` parameter is a valid ID', () => {
+      return req('get', '/INVALIDIDHERE')
+        .then(res => {
+          expect(res).to.have.status(400);
+        });
+    });
 
-  //   it('should 404 if the ID is valid but does not exist in the database', () => {
-  //     return req('get', '/faaaaaaaaaaaaaaaaaaaaaaa')
-  //       .then(res => {
-  //         expect(res).to.have.status(404);
-  //       });
-  //   });
+    it('should 404 if the ID is valid but does not exist in the database', () => {
+      return req('get', '/faaaaaaaaaaaaaaaaaaaaaaa')
+        .then(res => {
+          expect(res).to.have.status(404);
+        });
+    });
 
-  // });
+  });
 
   // describe('POST /api/folders', function() {
   //   it('should create and return a new item when provided valid data', function() {
