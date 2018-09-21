@@ -3,7 +3,7 @@ const router = express.Router();
 // Integrate mongoose
 const Tag = require('../models/tag');
 const Note = require('../models/note');
-const { validateTagId, requireFields, constructLocationHeader } = require('../utils/route-middleware');
+const { validateIds, validateFields, constructLocationHeader } = require('../utils/route-middleware');
 
 
 /* ========== GET/READ ALL ITEMS ========== */
@@ -15,7 +15,7 @@ router.get('/', (req, res, next) => {
 });
 
 /* ========== GET/READ A SINGLE ITEM ========== */
-router.get('/:id', validateTagId, (req, res, next) => {
+router.get('/:id', validateIds, (req, res, next) => {
   const id = req.params.id;
   return Tag.findById(id)
     .then(dbRes => {
@@ -26,7 +26,7 @@ router.get('/:id', validateTagId, (req, res, next) => {
 });
 
 /* ========== POST/CREATE AN ITEM ========== */
-router.post('/', requireFields(['name']), (req, res, next) => {
+router.post('/', validateFields(['name']), (req, res, next) => {
   const newItem = {name: req.body.name};
   return Tag.create(newItem)
     .then(dbRes => {
@@ -44,7 +44,7 @@ router.post('/', requireFields(['name']), (req, res, next) => {
 });
 
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
-router.put('/:id', validateTagId, requireFields(['id', 'name']), (req, res, next) => {
+router.put('/:id', validateIds, validateFields(['id', 'name']), (req, res, next) => {
   const id = req.params.id;
   const validFields = ['id', 'name'];
   if (!(id && req.body.id && id === req.body.id)) {
@@ -67,7 +67,7 @@ router.put('/:id', validateTagId, requireFields(['id', 'name']), (req, res, next
 });
 
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
-router.delete('/:id', validateTagId, (req, res, next) => {
+router.delete('/:id', validateIds, (req, res, next) => {
   const id = req.params.id;
   // Delete folder from Folder DB
   return Tag.findByIdAndDelete(id)
