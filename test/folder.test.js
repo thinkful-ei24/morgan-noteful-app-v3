@@ -7,16 +7,16 @@ const {
   TEST_MONGODB_URI
 } = require('../config');
 
-const Note = require('../models/note');
+const Folder = require('../models/folder');
 
 const {
-  notes
-} = require('../db/seed/notes');
+  folders
+} = require('../db/seed/folders');
 
 const expect = chai.expect;
 chai.use(chaiHttp);
 
-describe('Note Router Tests', () => {
+describe('Folder Router Tests', () => {
   before(function() {
     return mongoose.connect(TEST_MONGODB_URI, {
         useNewUrlParser: true
@@ -25,7 +25,7 @@ describe('Note Router Tests', () => {
   });
 
   beforeEach(function() {
-    return Note.insertMany(notes);
+    return Folder.insertMany(folders).then(() => Folder.createIndexes());
   });
 
   afterEach(function() {
@@ -38,7 +38,7 @@ describe('Note Router Tests', () => {
 
   const req = (method, endpoint) => {
     method = method.toLowerCase();
-    return chai.request(app)[method]('/api/notes' + endpoint);
+    return chai.request(app)[method]('/api/folders' + endpoint);
   };
 
 
@@ -47,82 +47,51 @@ describe('Note Router Tests', () => {
     if (typeof response === 'object') {
       if (Array.isArray(response)) {
         for (const item of response) {
-          expect(item).to.include.keys(expectedFields);
+          expect(item).to.have.keys(expectedFields);
         }
-      } else expect(response).to.include.keys(expectedFields);
+      } else expect(response).to.have.keys(expectedFields);
     }
   };
-  const expectedFields = ['id', 'title', 'content', 'createdAt', 'updatedAt'];
+  const expectedFields = ['id', 'name', 'createdAt', 'updatedAt'];
 
-  describe('GET /api/notes', function() {
+  describe('GET /api/folders', function() {
 
-    it('should respond with all notes', () => {
+    it('should respond with all folders', () => {
       // 1) Call the database **and** the API
       // 2) Wait for both promises to resolve using `Promise.all`
       return Promise.all([
-          Note.find(),
-          chai.request(app).get('/api/notes')
-        ])
+        Folder.find(),
+        req('get', '/')
+      ])
         // 3) then compare database results to API response
         .then(([data, res]) => {
           expect(res).to.have.status(200);
           expect(res).to.be.json;
           expect(res.body).to.be.a('array');
           expect(res.body).to.have.length(data.length);
-        });
-    });
-
-    it('should return the correct fields for each item', () => {
-      return req('get', '/')
-        .then(res => {
           validateFields(res, expectedFields);
         });
     });
 
-    it('should be able to search for notes (case-insensitive)', () => {
-      return req('get', '/?searchTerm=GAGA')
-        .then(res => {
-          expect(res.body[0].title).to.equal('7 things Lady Gaga has in common with cats');
-        });
-    });
-
-    it('should be able to search for folders', () => {
-      return req('get', '/?folderId=111111111111111111111100')
-        .then(res => {
-          expect(res.body.length).to.equal(3);
-        });
-    });
-
-    it('should be able to search with multiple filters', () => {
-      return req('get', '/?folderId=111111111111111111111101&searchTerm=cat')
-        .then(res => {
-          expect(res.body.length).to.equal(2);
-        });
-    });
-
-    it('should return an empty array with an empty search', () => {
-      return Promise.all([
-        req('get', '/?searchTerm=INVALIDDDDDDD'), 
-        req('get', '/?folderId=000111111111111111111101')
-      ])
-        .then(([searchRes, folderRes]) => {
-          expect(searchRes.body).to.deep.equal([]);
-          expect(folderRes.body).to.deep.equal([]);
+    it('should sort folders by name', () => {
+      return req('get', '/')
+        .then((dbRes) => {
+          expect(dbRes.body.map(item => item.name)).to.eql(['Archive', 'Drafts', 'Personal', 'Work']);
         });
     });
 
   });
 
-  describe('GET /api/notes/:id', function() {
+  describe('GET /api/folders/:id', function() {
 
-    it('should return correct note by the `id` parameter', function() {
+    it('should return correct folder by the `id` parameter', function() {
       let data;
       // 1) First, call the database
-      return Note.findOne()
+      return Folder.findOne()
         .then(_data => {
           data = _data;
           // 2) then call the API with the ID
-          return chai.request(app).get(`/api/notes/${data.id}`);
+          return req('get', `/${data.id}`);
         })
         .then((res) => {
           expect(res).to.have.status(200);
@@ -130,13 +99,19 @@ describe('Note Router Tests', () => {
 
           expect(res.body).to.be.an('object');
           validateFields(res, expectedFields);
+
+          // 3) then compare database results to API response
+          expect(res.body.id).to.equal(data.id);
+          expect(res.body.name).to.equal(data.name);
+          expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
+          expect(new Date(res.body.updatedAt)).to.eql(data.updatedAt);
         });
     });
 
     it('should return the expected fields', () => {
       // 1) First, call the database
       let data;
-      return Note.findOne()
+      return Folder.findOne()
         .then(_data => {
           data = _data;
           // 2) then call the API with the ID
@@ -163,17 +138,16 @@ describe('Note Router Tests', () => {
 
   });
 
-  describe('POST /api/notes', function() {
+  describe('POST /api/folders', function() {
+    
+    const newItem = {
+      name: 'TestFolder'
+    };
+    
     it('should create and return a new item when provided valid data', function() {
-      const newItem = {
-        'title': 'The best article about cats ever!',
-        'content': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor...'
-      };
-
       let res;
       // 1) First, call the API
-      return chai.request(app)
-        .post('/api/notes')
+      return req('post', '/')
         .send(newItem)
         .then(function(_res) {
           res = _res;
@@ -181,104 +155,65 @@ describe('Note Router Tests', () => {
           expect(res).to.have.header('location');
           expect(res).to.be.json;
           expect(res.body).to.be.a('object');
-          expect(res.body).to.have.keys('id', 'title', 'content', 'createdAt', 'updatedAt');
+          validateFields(res, expectedFields);
           // 2) then call the database
-          return Note.findById(res.body.id);
+          return Folder.findById(res.body.id);
         })
         // 3) then compare the API response to the database results
         .then(data => {
           expect(res.body.id).to.equal(data.id);
-          expect(res.body.title).to.equal(data.title);
-          expect(res.body.content).to.equal(data.content);
-          expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
-          expect(new Date(res.body.updatedAt)).to.eql(data.updatedAt);
         });
     });
 
     it('should return an object with the expected fields', () => {
       return req('post', '/')
-        .send({
-          title: 'Testing title here!',
-          content: 'Who needs it?'
-        })
+        .send(newItem)
         .then(res => {
           expect(res.body).to.be.an('object');
           validateFields(res, expectedFields);
         });
     });
 
-    it('should reject requests with an invalid folderId',() => {
-      return req('post', '/')
-        .send({
-          title: 'Testing title here!',
-          content: 'Who needs it?',
-          folderId: 'faaaaake'
+    it('should catch duplicate key errors', () => {
+      let item;
+      return Folder.findOne()
+        .then(_data => {
+          item = _data;
+          return chai.request(app).post('/api/folders/')
+            .send({name: item.name});
         })
-        .then(res => {
-          expect(res).to.have.status(400);
-        });
-    });
-
-    it('should require a title in the request body', () => {
-      return req('post', '/')
-        .send({
-          content: 'Who needs it?'
-        })
-        .then(res => {
+        .then((res) => {
           expect(res).to.have.status(400);
         });
     });
 
     it('should return a valid location header with new ID', () => {
       req('post', '/')
-        .send({
-          title: 'Another test here',
-          content: 'Who needs it?'
-        })
+        .send(newItem)
         .then(res => {
-          expect(res).to.have.header('Location', /\/api\/notes\/[0-9a-fA-F]{24}/);
+          expect(res).to.have.header('Location', /\/api\/folders\/[0-9a-fA-F]{24}/);
         });
     });
 
   });
 
-  describe('PUT /api/notes/:id', () => {
+  describe('PUT /api/folders/:id', () => {
 
-    it('should update a note by an `id`', () => {
+    it('should update a folder by an `id`', () => {
       let item;
-      return Note.findOne()
+      return Folder.findOne()
         .then(res => {
           item = res;
           return req('put', `/${item.id}`)
             .send({
               id: item.id,
-              title: 'Test title!',
-              content: 'hello world!'
+              name: 'testFolder'
             });
         })
         .then(res => {
           validateFields(res, expectedFields);
           expect(res.body.id).to.equal(item.id);
-          expect(res.body.title).to.equal('Test title!');
-          expect(res.body.content).to.equal('hello world!');
-        });
-    });
-
-    it('should be able to update a single field', () => {
-      let item;
-      return Note.findOne()
-        .then(res => {
-          item = res;
-          return req('put', `/${item.id}`)
-            .send({
-              id: item.id,
-              content: 'hello world!'
-            });
-        })
-        .then(res => {
-          validateFields(res, expectedFields);
-          expect(res.body.id).to.equal(item.id);
-          expect(res.body.content).to.equal('hello world!');
+          expect(res.body.name).to.equal('testFolder');
         });
     });
 
@@ -294,24 +229,11 @@ describe('Note Router Tests', () => {
         });
     });
 
-    it('should reject requests with an invalid folderId',() => {
-      return req('put', '/faaaaaaaaaaaaaaaaaaaaaaa')
-        .send({
-          title: 'Testing title here!',
-          content: 'Who needs it?',
-          folderId: 'faaaaake'
-        })
-        .then(res => {
-          expect(res).to.have.status(400);
-        });
-    });
-
     it('should 404 if the id is valid but does not exist in the database', () => {
       return req('put', '/faaaaaaaaaaaaaaaaaaaaaaa')
         .send({
           id: 'faaaaaaaaaaaaaaaaaaaaaaa',
-          title: 'HEllo!',
-          content: 'hello world!'
+          name: 'Hello'
         })
         .then(res => {
           expect(res).to.have.status(404);
@@ -321,8 +243,7 @@ describe('Note Router Tests', () => {
     it('should require an id in request body', () => {
       return req('put', '/000000000000000000000000')
         .send({
-          title: 'HEllo!',
-          content: 'hello world!'
+          name: 'Test'
         })
         .then(res => {
           expect(res).to.have.status(400);
@@ -333,8 +254,7 @@ describe('Note Router Tests', () => {
       return req('put', '/faaaaaaaaaaaaaaaaaaaaaaa')
         .send({
           id: '111111111111111111111110',
-          title: 'HEllo!',
-          content: 'hello world!'
+          name: 'Hello'
         })
         .then(res => {
           expect(res).to.have.status(400);
@@ -343,12 +263,13 @@ describe('Note Router Tests', () => {
 
   });
 
-  describe('DELETE /api/notes/:id', () => {
+  describe('DELETE /api/folders/:id', () => {
 
-    it('should delete a note by an `id`', () => {
-      return req('delete', '/000000000000000000000000')
+    it('should delete a folder by an `id`', () => {
+      return req('delete', '/111111111111111111111100')
         .then(res => {
           expect(res).to.have.status(204);
+          expect(res).to.not.have.key('Archive');
         });
     });
 
@@ -361,11 +282,23 @@ describe('Note Router Tests', () => {
     });
 
     it('should 404 if the id is valid but does not exist in the database', () => {
-      return req('delete', '/100000000000000000000000')
+      return req('delete', '/faaaaaaaaaaaaaaaaaaaaaaa')
         .then(res => {
           expect(res).to.have.status(404);
         });
     });
+
+    it('should remove corresponding folderId references after deleting folder', () => {
+      return req('delete', '111111111111111111111100')
+        .then((res) => {
+          return chai.request(app).get('/api/notes/');
+        })
+        .then((res) => {
+          const notesInFolder = res.body.filter(note => note.folderId === 111111111111111111111100);
+          expect(notesInFolder.length).to.equal(0);
+        });
+    });
+
   });
 
 });

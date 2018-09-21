@@ -2,28 +2,8 @@ const express = require('express');
 const router = express.Router();
 // Integrate mongoose
 const Note = require('../models/note');
-
 // Validation Middleware
-const validateId = (req, res, next) => {
-  const id = req.params.id;
-  if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-    const err = new Error('Invalid `id` parameter.');
-    err.status = 400;
-    return next(err);
-  }
-  return next();
-};
-
-const validateFields = (requiredFields) => (req, res, next) => {
-  for (const field of requiredFields) {
-    if (!(field in req.body)) {
-      const err = new Error(`Missing \`${field}\` in request body.`);
-      err.status = 400;
-      return next(err);
-    }
-  }
-  return next();
-};
+const { validateId, validateFields, constructLocationHeader } = require('../utils/route-middleware');
 
 // Helpers
 const constructNote = (fields, request) => {
@@ -36,22 +16,20 @@ const constructNote = (fields, request) => {
   return result;
 };
 
-const constructNewLocation = (req, res) => {
-  let url = req.originalUrl;
-  const lastIndex = url.length - 1;
-  if (url[lastIndex] === '/') url = url.slice(0, lastIndex);
-  return `${url}/${res.id}`;
-};
-
 /* ========== GET/READ ALL ITEMS ========== */
-router.get('/', (req, res, next) => {
-  const searchTerm = req.query.searchTerm;
+router.get('/', validateId, (req, res, next) => {
+  const {folderId, searchTerm} = req.query;
   let filter = {};
+  if (folderId) {
+    filter.folderId = folderId;
+  }
+
   if (searchTerm) {
     filter.title = {
       $regex: new RegExp(searchTerm, 'gi')
     };
   }
+
   return Note.find(filter).sort({ updatedAt: 'desc' })
     .then(dbResponse => res.status(200).json(dbResponse))
     .catch(err => next(err));
@@ -70,21 +48,21 @@ router.get('/:id', validateId, (req, res, next) => {
 });
 
 /* ========== POST/CREATE AN ITEM ========== */
-router.post('/', validateFields(['title']), (req, res, next) => {
-  const availableFields = ['title', 'content'];
+router.post('/', validateId, validateFields(['title']), (req, res, next) => {
+  const availableFields = ['title', 'content', 'folderId'];
   // Construct the new note
   const newNote = constructNote(availableFields, req.body);
   return Note.create(newNote)
     .then(dbResponse => {
       // Verify that a result is returned (otherwise throw 500 error)
       if (!dbResponse) throw new Error();
-      else return res.status(201).location(constructNewLocation(req, dbResponse)).json(dbResponse);
+      else return res.status(201).location(constructLocationHeader(req, dbResponse)).json(dbResponse);
     })
     .catch(err => next(err));
 });
 
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
-router.put('/:id', validateId, validateFields(['id']), (req, res, next) => {
+router.put('/:id', validateFields(['id']), validateId, (req, res, next) => {
   const id = req.params.id;
   // Validate that `id` matches ID in req.body
   if (!(id && req.body.id && id === req.body.id)) {
@@ -92,7 +70,7 @@ router.put('/:id', validateId, validateFields(['id']), (req, res, next) => {
     err.status = 400;
     return next(err);
   }
-  const updateFields = ['title', 'content'];
+  const updateFields = ['title', 'content', 'folderId'];
   // Construct a note from updateFields
   const updatedNote = constructNote(updateFields, req.body);
   // Validate ID and required fields. If correct, send request.
