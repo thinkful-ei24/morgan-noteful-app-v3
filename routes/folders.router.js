@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 // Integrate mongoose
 const Folder = require('../models/folder');
+const Note = require('../models/note');
 const { validateId, validateFields, constructLocationHeader } = require('../utils/route-middleware');
 
 
@@ -69,7 +70,19 @@ router.put('/:id', validateId, validateFields(['id', 'name']), (req, res, next) 
 
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
 router.delete('/:id', validateId, (req, res, next) => {
-  
+  const id = req.params.id;
+  // Delete folder from Folder DB
+  return Folder.findByIdAndDelete(id)
+    .then((dbRes) => {
+      if (!dbRes) return next();
+      else return Note.updateMany({folderId: id}, {$unset: {'folderId': ''}});
+    })
+    // Unset corresponding folderId from Note entries
+    .then(dbRes => {
+      if (!dbRes) return next();
+      else return res.status(204).end();
+    })
+    .catch(err => next(err));
 });
 
 

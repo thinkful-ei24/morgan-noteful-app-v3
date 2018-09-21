@@ -263,30 +263,42 @@ describe('Folder Router Tests', () => {
 
   });
 
-  // describe('DELETE /api/folders/:id', () => {
+  describe('DELETE /api/folders/:id', () => {
 
-  //   it('should delete a folder by an `id`', () => {
-  //     return req('delete', '/000000000000000000000000')
-  //       .then(res => {
-  //         expect(res).to.have.status(204);
-  //       });
-  //   });
+    it('should delete a folder by an `id`', () => {
+      return req('delete', '/111111111111111111111100')
+        .then(res => {
+          expect(res).to.have.status(204);
+          expect(res).to.not.have.key('Archive');
+        });
+    });
 
-  //   it('should require a valid id', () => {
-  //     return req('delete', '/00000')
-  //       .then(res => {
-  //         expect(res).to.have.status(400);
-  //       });
+    it('should require a valid id', () => {
+      return req('delete', '/00000')
+        .then(res => {
+          expect(res).to.have.status(400);
+        });
 
-  //   });
+    });
 
-  //   it('should 404 if the id is valid but does not exist in the database', () => {
-  //     return req('delete', '/100000000000000000000000')
-  //       .then(res => {
-  //         expect(res).to.have.status(404);
-  //       });
-  //   });
+    it('should 404 if the id is valid but does not exist in the database', () => {
+      return req('delete', '/faaaaaaaaaaaaaaaaaaaaaaa')
+        .then(res => {
+          expect(res).to.have.status(404);
+        });
+    });
 
-  // });
+    it('should remove corresponding folderId references after deleting folder', () => {
+      return req('delete', '111111111111111111111100')
+        .then((res) => {
+          return chai.request(app).get('/api/notes/');
+        })
+        .then((res) => {
+          const notesInFolder = res.body.filter(note => note.folderId === 111111111111111111111100);
+          expect(notesInFolder.length).to.equal(0);
+        });
+    });
+
+  });
 
 });
