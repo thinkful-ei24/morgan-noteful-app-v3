@@ -122,55 +122,55 @@ describe('Note Router Tests', () => {
 
   });
 
-  // describe('GET /api/notes/:id', function() {
+  describe('GET /api/notes/:id', function() {
 
-  //   it('should return correct note by the `id` parameter', function() {
-  //     let data;
-  //     // 1) First, call the database
-  //     return Note.findOne()
-  //       .then(_data => {
-  //         data = _data;
-  //         // 2) then call the API with the ID
-  //         return chai.request(app).get(`/api/notes/${data.id}`);
-  //       })
-  //       .then((res) => {
-  //         expect(res).to.have.status(200);
-  //         expect(res).to.be.json;
+    it('should return correct note by the `id` parameter', function() {
+      let data;
+      // 1) First, call the database
+      return Note.findOne()
+        .then(_data => {
+          data = _data;
+          // 2) then call the API with the ID
+          return chai.request(app).get(`/api/notes/${data.id}`);
+        })
+        .then((res) => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
 
-  //         expect(res.body).to.be.an('object');
-  //         validateFields(res, expectedFields);
-  //       });
-  //   });
+          expect(res.body).to.be.an('object');
+          validateFields(res, expectedFields);
+        });
+    });
 
-  //   it('should return the expected fields', () => {
-  //     // 1) First, call the database
-  //     let data;
-  //     return Note.findOne()
-  //       .then(_data => {
-  //         data = _data;
-  //         // 2) then call the API with the ID
-  //         return req('get', `/${data.id}`);
-  //       })
-  //       .then((res) => {
-  //         validateFields(res, expectedFields);
-  //       });
-  //   });
+    it('should return the expected fields', () => {
+      // 1) First, call the database
+      let data;
+      return Note.findOne()
+        .then(_data => {
+          data = _data;
+          // 2) then call the API with the ID
+          return req('get', `/${data.id}`);
+        })
+        .then((res) => {
+          validateFields(res, expectedFields);
+        });
+    });
 
-  //   it('should make sure the `id` parameter is a valid ID', () => {
-  //     return req('get', '/INVALIDIDHERE')
-  //       .then(res => {
-  //         expect(res).to.have.status(400);
-  //       });
-  //   });
+    it('should make sure the `id` parameter is a valid ID', () => {
+      return req('get', '/INVALIDIDHERE')
+        .then(res => {
+          expect(res).to.have.status(400);
+        });
+    });
 
-  //   it('should 404 if the ID is valid but does not exist in the database', () => {
-  //     return req('get', '/faaaaaaaaaaaaaaaaaaaaaaa')
-  //       .then(res => {
-  //         expect(res).to.have.status(404);
-  //       });
-  //   });
+    it('should 404 if the ID is valid but does not exist in the database', () => {
+      return req('get', '/faaaaaaaaaaaaaaaaaaaaaaa')
+        .then(res => {
+          expect(res).to.have.status(404);
+        });
+    });
 
-  // });
+  });
 
   // describe('POST /api/notes', function() {
   //   it('should create and return a new item when provided valid data', function() {
