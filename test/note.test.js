@@ -7,7 +7,7 @@ const {
   TEST_MONGODB_URI
 } = require('../config');
 
-const Note = require('../models/note');
+const Note = require('../models/Note');
 
 const {
   notes

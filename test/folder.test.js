@@ -7,7 +7,7 @@ const {
   TEST_MONGODB_URI
 } = require('../config');
 
-const Folder = require('../models/folder');
+const Folder = require('../models/Folder');
 
 const {
   folders
