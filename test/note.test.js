@@ -19,8 +19,8 @@ chai.use(chaiHttp);
 describe('Note Router Tests', () => {
   before(function() {
     return mongoose.connect(TEST_MONGODB_URI, {
-        useNewUrlParser: true
-      })
+      useNewUrlParser: true
+    })
       .then(() => mongoose.connection.db.dropDatabase());
   });
 
@@ -60,9 +60,9 @@ describe('Note Router Tests', () => {
       // 1) Call the database **and** the API
       // 2) Wait for both promises to resolve using `Promise.all`
       return Promise.all([
-          Note.find(),
-          chai.request(app).get('/api/notes')
-        ])
+        Note.find(),
+        chai.request(app).get('/api/notes')
+      ])
         // 3) then compare database results to API response
         .then(([data, res]) => {
           expect(res).to.have.status(200);
