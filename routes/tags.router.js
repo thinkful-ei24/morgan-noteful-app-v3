@@ -25,8 +25,21 @@ router.get('/:id', validateId, (req, res, next) => {
 });
 
 /* ========== POST/CREATE AN ITEM ========== */
-router.post('/', validateFields([]), (req, res, next) => {
-
+router.post('/', validateFields(['name']), (req, res, next) => {
+  const newItem = {name: req.body.name};
+  return Tag.create(newItem)
+    .then(dbRes => {
+      if (!dbRes) throw new Error();
+      else return res.status(201).location(constructLocationHeader(req, dbRes)).json(dbRes);
+    })
+    .catch(err => {
+      if (err.code === 11000) {
+        const error = new Error(`Tag \`${newItem.name}\` already exists (name must be unique).`);
+        error.status = 400;
+        return next(error);
+      }
+      else return next(err);
+    });
 });
 
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */

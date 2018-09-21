@@ -140,60 +140,60 @@ describe('Tag Router Tests', () => {
 
   describe('POST /api/tags', function() {
     
-  //   const newItem = {
-  //     name: 'TestTag'
-  //   };
+    const newItem = {
+      name: 'TestTag'
+    };
     
-  //   it('should create and return a new item when provided valid data', function() {
-  //     let res;
-  //     // 1) First, call the API
-  //     return req('post', '/')
-  //       .send(newItem)
-  //       .then(function(_res) {
-  //         res = _res;
-  //         expect(res).to.have.status(201);
-  //         expect(res).to.have.header('location');
-  //         expect(res).to.be.json;
-  //         expect(res.body).to.be.a('object');
-  //         validateFields(res, expectedFields);
-  //         // 2) then call the database
-  //         return Tag.findById(res.body.id);
-  //       })
-  //       // 3) then compare the API response to the database results
-  //       .then(data => {
-  //         expect(res.body.id).to.equal(data.id);
-  //       });
-  //   });
+    it('should create and return a new item when provided valid data', function() {
+      let res;
+      // 1) First, call the API
+      return req('post', '/')
+        .send(newItem)
+        .then(function(_res) {
+          res = _res;
+          expect(res).to.have.status(201);
+          expect(res).to.have.header('location');
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          validateFields(res, expectedFields);
+          // 2) then call the database
+          return Tag.findById(res.body.id);
+        })
+        // 3) then compare the API response to the database results
+        .then(data => {
+          expect(res.body.id).to.equal(data.id);
+        });
+    });
 
-  //   it('should return an object with the expected fields', () => {
-  //     return req('post', '/')
-  //       .send(newItem)
-  //       .then(res => {
-  //         expect(res.body).to.be.an('object');
-  //         validateFields(res, expectedFields);
-  //       });
-  //   });
+    it('should return an object with the expected fields', () => {
+      return req('post', '/')
+        .send(newItem)
+        .then(res => {
+          expect(res.body).to.be.an('object');
+          validateFields(res, expectedFields);
+        });
+    });
 
-  //   it('should catch duplicate key errors', () => {
-  //     let item;
-  //     return Tag.findOne()
-  //       .then(_data => {
-  //         item = _data;
-  //         return chai.request(app).post('/api/tags/')
-  //           .send({name: item.name});
-  //       })
-  //       .then((res) => {
-  //         expect(res).to.have.status(400);
-  //       });
-  //   });
+    it('should catch duplicate key errors', () => {
+      let item;
+      return Tag.findOne()
+        .then(_data => {
+          item = _data;
+          return chai.request(app).post('/api/tags/')
+            .send({name: item.name});
+        })
+        .then((res) => {
+          expect(res).to.have.status(400);
+        });
+    });
 
-  //   it('should return a valid location header with new ID', () => {
-  //     req('post', '/')
-  //       .send(newItem)
-  //       .then(res => {
-  //         expect(res).to.have.header('Location', /\/api\/tags\/[0-9a-fA-F]{24}/);
-  //       });
-  //   });
+    it('should return a valid location header with new ID', () => {
+      req('post', '/')
+        .send(newItem)
+        .then(res => {
+          expect(res).to.have.header('Location', /\/api\/tags\/[0-9a-fA-F]{24}/);
+        });
+    });
 
   });
 
