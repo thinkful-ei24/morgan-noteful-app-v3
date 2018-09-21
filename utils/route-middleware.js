@@ -1,10 +1,14 @@
 const validateId = (req, res, next) => {
-  const id = req.params.id;
-  if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-    const err = new Error('Invalid `id` parameter.');
-    err.status = 400;
-    return next(err);
+  const possibleIds = [req.query.folderId, req.params.id, req.query.id, req.body.id];
+  for (const id of possibleIds) {
+    if (id) {
+      if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+        const err = new Error('Invalid `id` parameter.');
+        err.status = 400;
+        return next(err);
+      }
   }
+}
   return next();
 };
 
