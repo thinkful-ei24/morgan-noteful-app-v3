@@ -62,7 +62,7 @@ router.post('/', validateId, validateFields(['title']), (req, res, next) => {
 });
 
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
-router.put('/:id', validateId, validateFields(['id']), (req, res, next) => {
+router.put('/:id', validateFields(['id']), validateId, (req, res, next) => {
   const id = req.params.id;
   // Validate that `id` matches ID in req.body
   if (!(id && req.body.id && id === req.body.id)) {
@@ -70,7 +70,7 @@ router.put('/:id', validateId, validateFields(['id']), (req, res, next) => {
     err.status = 400;
     return next(err);
   }
-  const updateFields = ['title', 'content'];
+  const updateFields = ['title', 'content', 'folderId'];
   // Construct a note from updateFields
   const updatedNote = constructNote(updateFields, req.body);
   // Validate ID and required fields. If correct, send request.

@@ -242,94 +242,106 @@ describe('Note Router Tests', () => {
 
   });
 
-//   describe('PUT /api/notes/:id', () => {
+  describe('PUT /api/notes/:id', () => {
 
-//     it('should update a note by an `id`', () => {
-//       let item;
-//       return Note.findOne()
-//         .then(res => {
-//           item = res;
-//           return req('put', `/${item.id}`)
-//             .send({
-//               id: item.id,
-//               title: 'Test title!',
-//               content: 'hello world!'
-//             });
-//         })
-//         .then(res => {
-//           validateFields(res, expectedFields);
-//           expect(res.body.id).to.equal(item.id);
-//           expect(res.body.title).to.equal('Test title!');
-//           expect(res.body.content).to.equal('hello world!');
-//         });
-//     });
+    it('should update a note by an `id`', () => {
+      let item;
+      return Note.findOne()
+        .then(res => {
+          item = res;
+          return req('put', `/${item.id}`)
+            .send({
+              id: item.id,
+              title: 'Test title!',
+              content: 'hello world!'
+            });
+        })
+        .then(res => {
+          validateFields(res, expectedFields);
+          expect(res.body.id).to.equal(item.id);
+          expect(res.body.title).to.equal('Test title!');
+          expect(res.body.content).to.equal('hello world!');
+        });
+    });
 
-//     it('should be able to update a single field', () => {
-//       let item;
-//       return Note.findOne()
-//         .then(res => {
-//           item = res;
-//           return req('put', `/${item.id}`)
-//             .send({
-//               id: item.id,
-//               content: 'hello world!'
-//             });
-//         })
-//         .then(res => {
-//           validateFields(res, expectedFields);
-//           expect(res.body.id).to.equal(item.id);
-//           expect(res.body.content).to.equal('hello world!');
-//         });
-//     });
+    it('should be able to update a single field', () => {
+      let item;
+      return Note.findOne()
+        .then(res => {
+          item = res;
+          return req('put', `/${item.id}`)
+            .send({
+              id: item.id,
+              content: 'hello world!'
+            });
+        })
+        .then(res => {
+          validateFields(res, expectedFields);
+          expect(res.body.id).to.equal(item.id);
+          expect(res.body.content).to.equal('hello world!');
+        });
+    });
 
-//     it('should require a valid id', () => {
-//       return req('put', '/INVALIDIDHERE')
-//         .send({
-//           id: 'INVALIDIDHERE',
-//           title: 'HEllo!',
-//           content: 'hello world!'
-//         })
-//         .then(res => {
-//           expect(res).to.have.status(400);
-//         });
-//     });
+    it('should require a valid id', () => {
+      return req('put', '/INVALIDIDHERE')
+        .send({
+          id: 'INVALIDIDHERE',
+          title: 'HEllo!',
+          content: 'hello world!'
+        })
+        .then(res => {
+          expect(res).to.have.status(400);
+        });
+    });
 
-//     it('should 404 if the id is valid but does not exist in the database', () => {
-//       return req('put', '/faaaaaaaaaaaaaaaaaaaaaaa')
-//         .send({
-//           id: 'faaaaaaaaaaaaaaaaaaaaaaa',
-//           title: 'HEllo!',
-//           content: 'hello world!'
-//         })
-//         .then(res => {
-//           expect(res).to.have.status(404);
-//         });
-//     });
+    it('should reject requests with an invalid folderId',() => {
+      return req('put', '/faaaaaaaaaaaaaaaaaaaaaaa')
+        .send({
+          title: 'Testing title here!',
+          content: 'Who needs it?',
+          folderId: 'faaaaake'
+        })
+        .then(res => {
+          expect(res).to.have.status(400);
+        });
+    });
 
-//     it('should require an id in request body', () => {
-//       return req('put', '/000000000000000000000000')
-//         .send({
-//           title: 'HEllo!',
-//           content: 'hello world!'
-//         })
-//         .then(res => {
-//           expect(res).to.have.status(400);
-//         });
-//     });
+    it('should 404 if the id is valid but does not exist in the database', () => {
+      return req('put', '/faaaaaaaaaaaaaaaaaaaaaaa')
+        .send({
+          id: 'faaaaaaaaaaaaaaaaaaaaaaa',
+          title: 'HEllo!',
+          content: 'hello world!'
+        })
+        .then(res => {
+          expect(res).to.have.status(404);
+        });
+    });
 
-//     it('should require a matching id in both the request query and body', () => {
-//       return req('put', '/faaaaaaaaaaaaaaaaaaaaaaa')
-//         .send({
-//           id: '111111111111111111111110',
-//           title: 'HEllo!',
-//           content: 'hello world!'
-//         })
-//         .then(res => {
-//           expect(res).to.have.status(400);
-//         });
-//     });
+    it('should require an id in request body', () => {
+      return req('put', '/000000000000000000000000')
+        .send({
+          title: 'HEllo!',
+          content: 'hello world!'
+        })
+        .then(res => {
+          expect(res).to.have.status(400);
+        });
+    });
 
-//   });
+    it('should require a matching id in both the request query and body', () => {
+      return req('put', '/faaaaaaaaaaaaaaaaaaaaaaa')
+        .send({
+          id: '111111111111111111111110',
+          title: 'HEllo!',
+          content: 'hello world!'
+        })
+        .then(res => {
+          expect(res).to.have.status(400);
+        });
+    });
+
+  });
 
 //   describe('DELETE /api/notes/:id', () => {
 
