@@ -1,5 +1,5 @@
 const validateId = (req, res, next) => {
-  const possibleIds = [req.query.folderId, req.params.id, req.query.id, req.body.id];
+  const possibleIds = [req.params.id, req.body.id, req.query.folderId, req.body.folderId];
   for (const id of possibleIds) {
     if (id) {
       if (!id.match(/^[0-9a-fA-F]{24}$/)) {
