@@ -7,7 +7,7 @@ const {
   TEST_MONGODB_URI
 } = require('../config');
 
-const Tag = require('../models/Tag');
+const Tag = require('../models/tag');
 
 const {
   tags
@@ -52,33 +52,33 @@ describe('Tag Router Tests', () => {
       } else expect(response).to.have.keys(expectedFields);
     }
   };
-  const expectedFields = [];
+  const expectedFields = ['id', 'name'];
 
   describe('GET /api/tags', function() {
 
-  //   it('should respond with all tags', () => {
-  //     // 1) Call the database **and** the API
-  //     // 2) Wait for both promises to resolve using `Promise.all`
-  //     return Promise.all([
-  //       Tag.find(),
-  //       req('get', '/')
-  //     ])
-  //       // 3) then compare database results to API response
-  //       .then(([data, res]) => {
-  //         expect(res).to.have.status(200);
-  //         expect(res).to.be.json;
-  //         expect(res.body).to.be.a('array');
-  //         expect(res.body).to.have.length(data.length);
-  //         validateFields(res, expectedFields);
-  //       });
-  //   });
+    it('should respond with all tags', () => {
+      // 1) Call the database **and** the API
+      // 2) Wait for both promises to resolve using `Promise.all`
+      return Promise.all([
+        Tag.find(),
+        req('get', '/')
+      ])
+        // 3) then compare database results to API response
+        .then(([data, res]) => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('array');
+          expect(res.body).to.have.length(data.length);
+          validateFields(res, expectedFields);
+        });
+    });
 
-  //   it('should sort tags by name', () => {
-  //     return req('get', '/')
-  //       .then((dbRes) => {
-  //         expect(dbRes.body.map(item => item.name)).to.eql(['Archive', 'Drafts', 'Personal', 'Work']);
-  //       });
-  //   });
+    it('should sort tags by name', () => {
+      return req('get', '/')
+        .then((dbRes) => {
+          expect(dbRes.body.map(item => item.name)).to.eql(['Breed', 'Domestic', 'Feral', 'Hybrid']);
+        });
+    });
 
   });
 

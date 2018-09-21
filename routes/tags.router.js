@@ -7,7 +7,7 @@ const { validateId, validateFields, constructLocationHeader } = require('../util
 
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/', (req, res, next) => {
-
+  res.sendStatus(404);
 });
 
 /* ========== GET/READ A SINGLE ITEM ========== */
