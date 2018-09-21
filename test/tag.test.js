@@ -84,7 +84,7 @@ describe('Tag Router Tests', () => {
 
   describe('GET /api/tags/:id', function() {
 
-    it('should return correct folder by the `id` parameter', function() {
+    it('should return correct tag by the `id` parameter', function() {
       let data;
       // 1) First, call the database
       return Tag.findOne()
@@ -199,105 +199,107 @@ describe('Tag Router Tests', () => {
 
   describe('PUT /api/tags/:id', () => {
 
-  //   it('should update a folder by an `id`', () => {
-  //     let item;
-  //     return Tag.findOne()
-  //       .then(res => {
-  //         item = res;
-  //         return req('put', `/${item.id}`)
-  //           .send({
-  //             id: item.id,
-  //             name: 'testTag'
-  //           });
-  //       })
-  //       .then(res => {
-  //         validateFields(res, expectedFields);
-  //         expect(res.body.id).to.equal(item.id);
-  //         expect(res.body.name).to.equal('testTag');
-  //       });
-  //   });
+    it('should update a tag by an `id`', () => {
+      let item;
+      return Tag.findOne()
+        .then(res => {
+          item = res;
+          return req('put', `/${item.id}`)
+            .send({
+              id: item.id,
+              name: 'testTag'
+            });
+        })
+        .then(res => {
+          validateFields(res, expectedFields);
+          expect(res.body.id).to.equal(item.id);
+          expect(res.body.name).to.equal('testTag');
+        });
+    });
 
-  //   it('should require a valid id', () => {
-  //     return req('put', '/INVALIDIDHERE')
-  //       .send({
-  //         id: 'INVALIDIDHERE',
-  //         title: 'HEllo!',
-  //         content: 'hello world!'
-  //       })
-  //       .then(res => {
-  //         expect(res).to.have.status(400);
-  //       });
-  //   });
+    it('should require a valid id', () => {
+      return req('put', '/INVALIDIDHERE')
+        .send({
+          id: 'INVALIDIDHERE',
+          tag: 'huehueheue'
+        })
+        .then(res => {
+          expect(res).to.have.status(400);
+        });
+    });
 
-  //   it('should 404 if the id is valid but does not exist in the database', () => {
-  //     return req('put', '/faaaaaaaaaaaaaaaaaaaaaaa')
-  //       .send({
-  //         id: 'faaaaaaaaaaaaaaaaaaaaaaa',
-  //         name: 'Hello'
-  //       })
-  //       .then(res => {
-  //         expect(res).to.have.status(404);
-  //       });
-  //   });
+    it('should 404 if the id is valid but does not exist in the database', () => {
+      return req('put', '/faaaaaaaaaaaaaaaaaaaaaaa')
+        .send({
+          id: 'faaaaaaaaaaaaaaaaaaaaaaa',
+          name: 'Hello'
+        })
+        .then(res => {
+          expect(res).to.have.status(404);
+        });
+    });
 
-  //   it('should require an id in request body', () => {
-  //     return req('put', '/000000000000000000000000')
-  //       .send({
-  //         name: 'Test'
-  //       })
-  //       .then(res => {
-  //         expect(res).to.have.status(400);
-  //       });
-  //   });
+    it('should require an id in request body', () => {
+      return req('put', '/000000000000000000000000')
+        .send({
+          name: 'Test'
+        })
+        .then(res => {
+          expect(res).to.have.status(400);
+        });
+    });
 
-  //   it('should require a matching id in both the request query and body', () => {
-  //     return req('put', '/faaaaaaaaaaaaaaaaaaaaaaa')
-  //       .send({
-  //         id: '111111111111111111111110',
-  //         name: 'Hello'
-  //       })
-  //       .then(res => {
-  //         expect(res).to.have.status(400);
-  //       });
-  //   });
+    it('should require a matching id in both the request query and body', () => {
+      return req('put', '/faaaaaaaaaaaaaaaaaaaaaaa')
+        .send({
+          id: '111111111111111111111110',
+          name: 'Hello'
+        })
+        .then(res => {
+          expect(res).to.have.status(400);
+        });
+    });
 
   });
 
   describe('DELETE /api/tags/:id', () => {
 
-  //   it('should delete a folder by an `id`', () => {
-  //     return req('delete', '/111111111111111111111100')
-  //       .then(res => {
-  //         expect(res).to.have.status(204);
-  //         expect(res).to.not.have.key('Archive');
-  //       });
-  //   });
+    it('should delete a tag by an `id`', () => {
+      return req('delete', '/222222222222222222222202')
+        .then(res => {
+          expect(res).to.have.status(204);
+          expect(res).to.not.have.key('Archive');
+        });
+    });
 
-  //   it('should require a valid id', () => {
-  //     return req('delete', '/00000')
-  //       .then(res => {
-  //         expect(res).to.have.status(400);
-  //       });
+    it('should require a valid id', () => {
+      return req('delete', '/00000')
+        .then(res => {
+          expect(res).to.have.status(400);
+        });
 
-  //   });
+    });
 
-  //   it('should 404 if the id is valid but does not exist in the database', () => {
-  //     return req('delete', '/faaaaaaaaaaaaaaaaaaaaaaa')
-  //       .then(res => {
-  //         expect(res).to.have.status(404);
-  //       });
-  //   });
+    it('should 404 if the id is valid but does not exist in the database', () => {
+      return req('delete', '/faaaaaaaaaaaaaaaaaaaaaaa')
+        .then(res => {
+          expect(res).to.have.status(404);
+        });
+    });
 
-  //   it('should remove corresponding folderId references after deleting folder', () => {
-  //     return req('delete', '111111111111111111111100')
-  //       .then((res) => {
-  //         return chai.request(app).get('/api/notes/');
-  //       })
-  //       .then((res) => {
-  //         const notesInTag = res.body.filter(note => note.folderId === 111111111111111111111100);
-  //         expect(notesInTag.length).to.equal(0);
-  //       });
-  //   });
+    it('should remove corresponding tagId references after deleting tag', () => {
+      return req('delete', '222222222222222222222201')
+        .then((res) => {
+          return chai.request(app).get('/api/notes/');
+        })
+        .then((res) => {
+          const notesWithTag = res.body.reduce((tags, note) => {
+            if (note.tags.includes('222222222222222222222201')) tags++;
+            return tags;
+          }, 0);
+          expect(notesWithTag).to.equal(0);
+        });
+    });
 
   });
 

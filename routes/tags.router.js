@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 // Integrate mongoose
 const Tag = require('../models/tag');
+const Note = require('../models/note');
 const { validateId, validateFields, constructLocationHeader } = require('../utils/route-middleware');
 
 
@@ -43,13 +44,43 @@ router.post('/', validateFields(['name']), (req, res, next) => {
 });
 
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
-router.put('/:id', validateId, validateFields([]), (req, res, next) => {
-
+router.put('/:id', validateId, validateFields(['id', 'name']), (req, res, next) => {
+  const id = req.params.id;
+  const validFields = ['id', 'name'];
+  if (!(id && req.body.id && id === req.body.id)) {
+    const err = new Error('Request body `id` and parameter `id` must be equivalent.');
+    err.status = 400;
+    return next(err);
+  }
+  const item = {};
+  for (const field of validFields) {
+    if (field in req.body) {
+      item[field] = req.body[field];
+    }
+  }
+  return Tag.findByIdAndUpdate(id, item, {new: true})
+    .then(dbRes => {
+      if (!dbRes) return next();
+      else return res.status(200).json(dbRes);
+    })
+    .catch(err => next(err));
 });
 
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
 router.delete('/:id', validateId, (req, res, next) => {
-
+  const id = req.params.id;
+  // Delete folder from Folder DB
+  return Tag.findByIdAndDelete(id)
+    .then((dbRes) => {
+      if (!dbRes) return next();
+      else return Note.updateMany({}, {$pull: {tags: id}});
+    })
+    // Unset corresponding tag from Note entries
+    .then(dbRes => {
+      if (!dbRes) return next();
+      else return res.status(204).end();
+    })
+    .catch(err => next(err));
 });
 
 
