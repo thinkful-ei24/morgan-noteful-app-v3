@@ -17,14 +17,19 @@ const constructNote = (fields, request) => {
 };
 
 /* ========== GET/READ ALL ITEMS ========== */
-router.get('/', (req, res, next) => {
-  const searchTerm = req.query.searchTerm;
+router.get('/', validateId, (req, res, next) => {
+  const {folderId, searchTerm} = req.query;
   let filter = {};
+  if (folderId) {
+    filter.folderId = folderId;
+  }
+
   if (searchTerm) {
     filter.title = {
       $regex: new RegExp(searchTerm, 'gi')
     };
   }
+
   return Note.find(filter).sort({ updatedAt: 'desc' })
     .then(dbResponse => res.status(200).json(dbResponse))
     .catch(err => next(err));

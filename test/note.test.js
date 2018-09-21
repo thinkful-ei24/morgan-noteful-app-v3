@@ -1,99 +1,117 @@
-// const chai = require('chai');
-// const chaiHttp = require('chai-http');
-// const mongoose = require('mongoose');
+const chai = require('chai');
+const chaiHttp = require('chai-http');
+const mongoose = require('mongoose');
 
-// const app = require('../server');
-// const {
-//   TEST_MONGODB_URI
-// } = require('../config');
+const app = require('../server');
+const {
+  TEST_MONGODB_URI
+} = require('../config');
 
-// const Note = require('../models/note');
+const Note = require('../models/note');
 
-// const {
-//   notes
-// } = require('../db/seed/notes');
+const {
+  notes
+} = require('../db/seed/notes');
 
-// const expect = chai.expect;
-// chai.use(chaiHttp);
+const expect = chai.expect;
+chai.use(chaiHttp);
 
-// describe('Note Router Tests', () => {
-//   before(function() {
-//     return mongoose.connect(TEST_MONGODB_URI, {
-//         useNewUrlParser: true
-//       })
-//       .then(() => mongoose.connection.db.dropDatabase());
-//   });
+describe('Note Router Tests', () => {
+  before(function() {
+    return mongoose.connect(TEST_MONGODB_URI, {
+        useNewUrlParser: true
+      })
+      .then(() => mongoose.connection.db.dropDatabase());
+  });
 
-//   beforeEach(function() {
-//     return Note.insertMany(notes);
-//   });
+  beforeEach(function() {
+    return Note.insertMany(notes);
+  });
 
-//   afterEach(function() {
-//     return mongoose.connection.db.dropDatabase();
-//   });
+  afterEach(function() {
+    return mongoose.connection.db.dropDatabase();
+  });
 
-//   after(function() {
-//     return mongoose.disconnect();
-//   });
+  after(function() {
+    return mongoose.disconnect();
+  });
 
-//   const req = (method, endpoint) => {
-//     method = method.toLowerCase();
-//     return chai.request(app)[method]('/api/notes' + endpoint);
-//   };
+  const req = (method, endpoint) => {
+    method = method.toLowerCase();
+    return chai.request(app)[method]('/api/notes' + endpoint);
+  };
 
 
-//   const validateFields = (res, expectedFields) => {
-//     const response = res.body;
-//     if (typeof response === 'object') {
-//       if (Array.isArray(response)) {
-//         for (const item of response) {
-//           expect(item).to.have.keys(expectedFields);
-//         }
-//       } else expect(response).to.have.keys(expectedFields);
-//     }
-//   };
-//   const expectedFields = ['id', 'title', 'content', 'createdAt', 'updatedAt'];
+  const validateFields = (res, expectedFields) => {
+    const response = res.body;
+    if (typeof response === 'object') {
+      if (Array.isArray(response)) {
+        for (const item of response) {
+          expect(item).to.include.keys(expectedFields);
+        }
+      } else expect(response).to.include.keys(expectedFields);
+    }
+  };
+  const expectedFields = ['id', 'title', 'content', 'createdAt', 'updatedAt'];
 
-//   describe('GET /api/notes', function() {
+  describe('GET /api/notes', function() {
 
-//     it('should respond with all notes', () => {
-//       // 1) Call the database **and** the API
-//       // 2) Wait for both promises to resolve using `Promise.all`
-//       return Promise.all([
-//           Note.find(),
-//           chai.request(app).get('/api/notes')
-//         ])
-//         // 3) then compare database results to API response
-//         .then(([data, res]) => {
-//           expect(res).to.have.status(200);
-//           expect(res).to.be.json;
-//           expect(res.body).to.be.a('array');
-//           expect(res.body).to.have.length(data.length);
-//         });
-//     });
+    it('should respond with all notes', () => {
+      // 1) Call the database **and** the API
+      // 2) Wait for both promises to resolve using `Promise.all`
+      return Promise.all([
+          Note.find(),
+          chai.request(app).get('/api/notes')
+        ])
+        // 3) then compare database results to API response
+        .then(([data, res]) => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('array');
+          expect(res.body).to.have.length(data.length);
+        });
+    });
 
-//     it('should return the correct fields for each item', () => {
-//       return req('get', '/')
-//         .then(res => {
-//           validateFields(res, expectedFields);
-//         });
-//     });
+    it('should return the correct fields for each item', () => {
+      return req('get', '/')
+        .then(res => {
+          validateFields(res, expectedFields);
+        });
+    });
 
-//     it('should be able to search for notes (case-insensitive)', () => {
-//       return req('get', '/?searchTerm=GAGA')
-//         .then(res => {
-//           expect(res.body[0].title).to.equal('7 things Lady Gaga has in common with cats');
-//         });
-//     });
+    it('should be able to search for notes (case-insensitive)', () => {
+      return req('get', '/?searchTerm=GAGA')
+        .then(res => {
+          expect(res.body[0].title).to.equal('7 things Lady Gaga has in common with cats');
+        });
+    });
 
-//     it('should return an empty array with an invalid search', () => {
-//       return req('get', '/?searchTerm=INVALIDDDDDDD')
-//         .then(res => {
-//           expect(res.body).to.deep.equal([]);
-//         });
-//     });
+    it('should be able to search for folders', () => {
+      return req('get', '/?folderId=111111111111111111111100')
+        .then(res => {
+          expect(res.body.length).to.equal(3);
+        });
+    });
 
-//   });
+    it('should be able to search with multiple filters', () => {
+      return req('get', '/?folderId=111111111111111111111101&searchTerm=cat')
+        .then(res => {
+          expect(res.body.length).to.equal(2);
+        });
+    });
+
+    it('should return an empty array with an empty search', () => {
+      return Promise.all([
+        req('get', '/?searchTerm=INVALIDDDDDDD'), 
+        req('get', '/?folderId=000111111111111111111101')
+      ])
+        .then(([searchRes, folderRes]) => {
+          expect(searchRes.body).to.deep.equal([]);
+          expect(folderRes.body).to.deep.equal([]);
+        });
+    });
+
+  });
 
 //   describe('GET /api/notes/:id', function() {
 
@@ -334,4 +352,4 @@
 
 //   });
 
-// });
+});
