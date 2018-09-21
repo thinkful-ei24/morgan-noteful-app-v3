@@ -25,7 +25,7 @@ describe('Folder Router Tests', () => {
   });
 
   beforeEach(function() {
-    return Folder.insertMany(folders);
+    return Folder.insertMany(folders).then(() => Folder.createIndexes());
   });
 
   afterEach(function() {
@@ -174,19 +174,18 @@ describe('Folder Router Tests', () => {
         });
     });
 
-    // it('should catch duplicate key errors', () => {
-    //   let item;
-    //   return Folder.findOne()
-    //     .then(_data => {
-    //       item = _data;
-    //       return chai.request(app).post('/api/folders/')
-    //         .send({name: item.name});
-    //     })
-    //     .then((res) => {
-    //       console.log(res.body);
-    //       expect(res).to.have.status(400);
-    //     });
-    // });
+    it('should catch duplicate key errors', () => {
+      let item;
+      return Folder.findOne()
+        .then(_data => {
+          item = _data;
+          return chai.request(app).post('/api/folders/')
+            .send({name: item.name});
+        })
+        .then((res) => {
+          expect(res).to.have.status(400);
+        });
+    });
 
     it('should return a valid location header with new ID', () => {
       req('post', '/')
