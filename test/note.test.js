@@ -343,30 +343,29 @@ describe('Note Router Tests', () => {
 
   });
 
-//   describe('DELETE /api/notes/:id', () => {
+  describe('DELETE /api/notes/:id', () => {
 
-//     it('should delete a note by an `id`', () => {
-//       return req('delete', '/000000000000000000000000')
-//         .then(res => {
-//           expect(res).to.have.status(204);
-//         });
-//     });
+    it('should delete a note by an `id`', () => {
+      return req('delete', '/000000000000000000000000')
+        .then(res => {
+          expect(res).to.have.status(204);
+        });
+    });
 
-//     it('should require a valid id', () => {
-//       return req('delete', '/00000')
-//         .then(res => {
-//           expect(res).to.have.status(400);
-//         });
+    it('should require a valid id', () => {
+      return req('delete', '/00000')
+        .then(res => {
+          expect(res).to.have.status(400);
+        });
 
-//     });
+    });
 
-//     it('should 404 if the id is valid but does not exist in the database', () => {
-//       return req('delete', '/100000000000000000000000')
-//         .then(res => {
-//           expect(res).to.have.status(404);
-//         });
-//     });
-
-//   });
+    it('should 404 if the id is valid but does not exist in the database', () => {
+      return req('delete', '/100000000000000000000000')
+        .then(res => {
+          expect(res).to.have.status(404);
+        });
+    });
+  });
 
 });
