@@ -52,7 +52,7 @@ describe('Tag Router Tests', () => {
       } else expect(response).to.have.keys(expectedFields);
     }
   };
-  const expectedFields = ['id', 'name'];
+  const expectedFields = ['id', 'name', 'createdAt', 'updatedAt'];
 
   describe('GET /api/tags', function() {
 
@@ -76,7 +76,7 @@ describe('Tag Router Tests', () => {
     it('should sort tags by name', () => {
       return req('get', '/')
         .then((dbRes) => {
-          expect(dbRes.body.map(item => item.name)).to.eql(['Breed', 'Domestic', 'Feral', 'Hybrid']);
+          expect(dbRes.body.map(item => item.name)).to.eql(['breed', 'domestic', 'feral', 'hybrid']);
         });
     });
 
@@ -84,57 +84,57 @@ describe('Tag Router Tests', () => {
 
   describe('GET /api/tags/:id', function() {
 
-    // it('should return correct folder by the `id` parameter', function() {
-    //   let data;
-    //   // 1) First, call the database
-    //   return Tag.findOne()
-    //     .then(_data => {
-    //       data = _data;
-    //       // 2) then call the API with the ID
-    //       return req('get', `/${data.id}`);
-    //     })
-    //     .then((res) => {
-    //       expect(res).to.have.status(200);
-    //       expect(res).to.be.json;
+    it('should return correct folder by the `id` parameter', function() {
+      let data;
+      // 1) First, call the database
+      return Tag.findOne()
+        .then(_data => {
+          data = _data;
+          // 2) then call the API with the ID
+          return req('get', `/${data.id}`);
+        })
+        .then((res) => {
+          expect(res).to.have.status(200);
+          expect(res).to.be.json;
 
-    //       expect(res.body).to.be.an('object');
-    //       validateFields(res, expectedFields);
+          expect(res.body).to.be.an('object');
+          validateFields(res, expectedFields);
 
-    //       // 3) then compare database results to API response
-    //       expect(res.body.id).to.equal(data.id);
-    //       expect(res.body.name).to.equal(data.name);
-    //       expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
-    //       expect(new Date(res.body.updatedAt)).to.eql(data.updatedAt);
-    //     });
-    // });
+          // 3) then compare database results to API response
+          expect(res.body.id).to.equal(data.id);
+          expect(res.body.name).to.equal(data.name);
+          expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
+          expect(new Date(res.body.updatedAt)).to.eql(data.updatedAt);
+        });
+    });
 
-    // it('should return the expected fields', () => {
-    //   // 1) First, call the database
-    //   let data;
-    //   return Tag.findOne()
-    //     .then(_data => {
-    //       data = _data;
-    //       // 2) then call the API with the ID
-    //       return req('get', `/${data.id}`);
-    //     })
-    //     .then((res) => {
-    //       validateFields(res, expectedFields);
-    //     });
-    // });
+    it('should return the expected fields', () => {
+      // 1) First, call the database
+      let data;
+      return Tag.findOne()
+        .then(_data => {
+          data = _data;
+          // 2) then call the API with the ID
+          return req('get', `/${data.id}`);
+        })
+        .then((res) => {
+          validateFields(res, expectedFields);
+        });
+    });
 
-    // it('should make sure the `id` parameter is a valid ID', () => {
-    //   return req('get', '/INVALIDIDHERE')
-    //     .then(res => {
-    //       expect(res).to.have.status(400);
-    //     });
-    // });
+    it('should make sure the `id` parameter is a valid ID', () => {
+      return req('get', '/INVALIDIDHERE')
+        .then(res => {
+          expect(res).to.have.status(400);
+        });
+    });
 
-    // it('should 404 if the ID is valid but does not exist in the database', () => {
-    //   return req('get', '/faaaaaaaaaaaaaaaaaaaaaaa')
-    //     .then(res => {
-    //       expect(res).to.have.status(404);
-    //     });
-    // });
+    it('should 404 if the ID is valid but does not exist in the database', () => {
+      return req('get', '/faaaaaaaaaaaaaaaaaaaaaaa')
+        .then(res => {
+          expect(res).to.have.status(404);
+        });
+    });
 
   });
 
