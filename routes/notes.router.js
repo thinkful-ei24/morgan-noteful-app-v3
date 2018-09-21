@@ -3,7 +3,7 @@ const router = express.Router();
 // Integrate mongoose
 const Note = require('../models/note');
 // Validation Middleware
-const { validateIds, validateFields, constructLocationHeader } = require('../utils/route-middleware');
+const { validateNoteId, validateTagId, validateFolderId, requireFields, constructLocationHeader } = require('../utils/route-middleware');
 
 // Helpers
 const constructNote = (fields, request) => {
@@ -13,11 +13,12 @@ const constructNote = (fields, request) => {
       result[field] = request[field];
     }
   }
+  if (result.tags === undefined) result.tags = [];
   return result;
 };
 
 /* ========== GET/READ ALL ITEMS ========== */
-router.get('/', validateIds, (req, res, next) => {
+router.get('/', validateFolderId, validateTagId, (req, res, next) => {
   const {folderId, searchTerm, tagId} = req.query;
   // Add relevant filters to query
   let filter = {};
@@ -31,7 +32,7 @@ router.get('/', validateIds, (req, res, next) => {
 });
 
 /* ========== GET/READ A SINGLE ITEM ========== */
-router.get('/:id', validateIds, (req, res, next) => {
+router.get('/:id', validateNoteId, (req, res, next) => {
   const id = req.params.id;
   return Note.findById(id)
     .then(dbResponse => {
@@ -43,8 +44,8 @@ router.get('/:id', validateIds, (req, res, next) => {
 });
 
 /* ========== POST/CREATE AN ITEM ========== */
-router.post('/', validateIds, validateFields(['title']), (req, res, next) => {
-  const availableFields = ['title', 'content', 'folderId'];
+router.post('/', validateNoteId, validateFolderId, validateTagId, requireFields(['title']), (req, res, next) => {
+  const availableFields = ['title', 'content', 'folderId', 'tags'];
   // Construct the new note
   const newNote = constructNote(availableFields, req.body);
   return Note.create(newNote)
@@ -53,11 +54,19 @@ router.post('/', validateIds, validateFields(['title']), (req, res, next) => {
       if (!dbResponse) throw new Error();
       else return res.status(201).location(constructLocationHeader(req, dbResponse)).json(dbResponse);
     })
-    .catch(err => next(err));
+    .catch(err => {
+      if (err.name === 'ValidationError') {
+        console.log(err);
+        const error = new Error(`${err._message}.`);
+        error.status = 404;
+        return next(error);
+      }
+      next(err);
+    });
 });
 
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
-router.put('/:id', validateFields(['id']), validateIds, (req, res, next) => {
+router.put('/:id', requireFields(['id']), validateNoteId, validateFolderId, validateTagId, (req, res, next) => {
   const id = req.params.id;
   // Validate that `id` matches ID in req.body
   if (!(id && req.body.id && id === req.body.id)) {
@@ -65,7 +74,7 @@ router.put('/:id', validateFields(['id']), validateIds, (req, res, next) => {
     err.status = 400;
     return next(err);
   }
-  const updateFields = ['title', 'content', 'folderId'];
+  const updateFields = ['title', 'content', 'folderId', 'tags'];
   // Construct a note from updateFields
   const updatedNote = constructNote(updateFields, req.body);
   // Validate ID and required fields. If correct, send request.
@@ -79,7 +88,7 @@ router.put('/:id', validateFields(['id']), validateIds, (req, res, next) => {
 });
 
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
-router.delete('/:id', validateIds, (req, res, next) => {
+router.delete('/:id', validateNoteId, (req, res, next) => {
   const id = req.params.id;
   return Note.findByIdAndDelete(id)
     .then(dbResponse => {
