@@ -1,5 +1,5 @@
-const validateId = (req, res, next) => {
-  const possibleIds = [req.params.id, req.body.id, req.query.folderId, req.body.folderId];
+const validateIds = (req, res, next) => {
+  const possibleIds = [req.params.id, req.body.id, req.query.folderId, req.body.folderId, req.query.tagId, req.body.tagId];
   for (const id of possibleIds) {
     if (id) {
       if (!id.match(/^[0-9a-fA-F]{24}$/)) {
@@ -30,4 +30,4 @@ const constructLocationHeader = (req, res) => {
   return `${url}/${res.id}`;
 };
 
-module.exports = {validateFields, validateId, constructLocationHeader};
+module.exports = {validateFields, validateIds, constructLocationHeader};

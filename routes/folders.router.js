@@ -3,7 +3,7 @@ const router = express.Router();
 // Integrate mongoose
 const Folder = require('../models/folder');
 const Note = require('../models/note');
-const { validateId, validateFields, constructLocationHeader } = require('../utils/route-middleware');
+const { validateIds, validateFields, constructLocationHeader } = require('../utils/route-middleware');
 
 
 /* ========== GET/READ ALL ITEMS ========== */
@@ -17,7 +17,7 @@ router.get('/', (req, res, next) => {
 });
 
 /* ========== GET/READ A SINGLE ITEM ========== */
-router.get('/:id', validateId, (req, res, next) => {
+router.get('/:id', validateIds, (req, res, next) => {
   const id = req.params.id;
   return Folder.findById(id)
     .then(dbRes => {
@@ -46,7 +46,7 @@ router.post('/', validateFields(['name']), (req, res, next) => {
 });
 
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
-router.put('/:id', validateId, validateFields(['id', 'name']), (req, res, next) => {
+router.put('/:id', validateIds, validateFields(['id', 'name']), (req, res, next) => {
   const id = req.params.id;
   const validFields = ['id', 'name'];
   if (!(id && req.body.id && id === req.body.id)) {
@@ -69,7 +69,7 @@ router.put('/:id', validateId, validateFields(['id', 'name']), (req, res, next) 
 });
 
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
-router.delete('/:id', validateId, (req, res, next) => {
+router.delete('/:id', validateIds, (req, res, next) => {
   const id = req.params.id;
   // Delete folder from Folder DB
   return Folder.findByIdAndDelete(id)

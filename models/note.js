@@ -18,4 +18,14 @@ noteSchema.set('toObject', {
   }
 });
 
+noteSchema.pre('find', function(next) {
+  this.populate('tags');
+  next();
+});
+
+noteSchema.pre('findOne', function(next) {
+  this.populate('tags');
+  next();
+});
+
 module.exports = mongoose.model('Note', noteSchema);
