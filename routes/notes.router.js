@@ -48,7 +48,7 @@ router.get('/:id', validateId, (req, res, next) => {
 });
 
 /* ========== POST/CREATE AN ITEM ========== */
-router.post('/', validateFields(['title']), (req, res, next) => {
+router.post('/', validateId, validateFields(['title']), (req, res, next) => {
   const availableFields = ['title', 'content'];
   // Construct the new note
   const newNote = constructNote(availableFields, req.body);
