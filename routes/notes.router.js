@@ -65,8 +65,8 @@ router.put('/:id', requireFields(['id']), validateNoteId, validateTagId, validat
     err.status = 400;
     return next(err);
   }
-  if (req.body.folderId === '') delete req.body.folderId;
   const updateFields = ['title', 'content', 'folderId', 'tags'];
+  if (updateFields.tags === '') delete updateFields.tags;
   // Construct a note from updateFields
   const updatedNote = constructNote(updateFields, req.body);
   return Note.findByIdAndUpdate(id, updatedNote, { new: true })
