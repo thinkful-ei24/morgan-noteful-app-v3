@@ -73,11 +73,11 @@ const validateUser = (req, res, next) => {
   return next();
 };
 
-const requireFields = (requiredFields) => (req, res, next) => {
+const requireFields = (requiredFields, status = 400) => (req, res, next) => {
   for (const field of requiredFields) {
     if (!(field in req.body)) {
       const err = new Error(`Missing \`${field}\` in request body.`);
-      err.status = 400;
+      err.status = status;
       return next(err);
     }
   }
