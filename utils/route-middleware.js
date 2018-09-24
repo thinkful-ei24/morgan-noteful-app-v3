@@ -43,6 +43,36 @@ const validateTagId = (req, res, next) => {
   return next();
 };
 
+const validateUser = (req, res, next) => {
+  const { username, password } = req.body;
+  // Require username and password to be strings
+  if (!(typeof username === 'string' && typeof password === 'string')) {
+    const err = new Error('`username` and `password` must be of type string.');
+    err.status = 400;
+    return next(err);
+  }
+  if (username.length < 1) {
+    const err = new Error('Username must be at least one character long.');
+    err.status = 400;
+    return next(err);
+  }
+  if (password.length < 8 || password.length > 72) {
+    const err = new Error('Password must be between 8 and 72 characters long.');
+    err.status = 400;
+    return next(err);
+  }
+  // Require no leading or trailing whitespace
+  if(username[0] === ' ' || 
+    username[username.length - 1] === ' ' || 
+    password[0] === ' ' || 
+    password[password.length - 1] === ' ') {
+    const err = new Error('Username and password cannot begin or end with a space.');
+    err.status = 400;
+    return next(err);
+  }
+  return next();
+};
+
 const requireFields = (requiredFields) => (req, res, next) => {
   for (const field of requiredFields) {
     if (!(field in req.body)) {
@@ -61,4 +91,4 @@ const constructLocationHeader = (req, res) => {
   return `${url}/${res.id}`;
 };
 
-module.exports = {requireFields, validateTagId, validateFolderId, validateNoteId, constructLocationHeader};
+module.exports = {requireFields, validateTagId, validateFolderId, validateNoteId, validateUser, constructLocationHeader};
