@@ -172,84 +172,74 @@ describe('Note Router Tests', () => {
 
   });
 
-  // describe('POST /api/notes', function() {
-  //   it('should create and return a new item when provided valid data', function() {
-  //     const newItem = {
-  //       'title': 'The best article about cats ever!',
-  //       'content': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor...'
-  //     };
+  describe('POST /api/notes', function() {
+    it('should create and return a new item when provided valid data', function() {
+      const newItem = {
+        'title': 'The best article about cats ever!',
+        'content': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor...',
+        'tags': ['222222222222222222222200']
+      };
 
-  //     let res;
-  //     // 1) First, call the API
-  //     return chai.request(app)
-  //       .post('/api/notes')
-  //       .send(newItem)
-  //       .then(function(_res) {
-  //         res = _res;
-  //         expect(res).to.have.status(201);
-  //         expect(res).to.have.header('location');
-  //         expect(res).to.be.json;
-  //         expect(res.body).to.be.a('object');
-  //         expect(res.body).to.have.keys('id', 'title', 'content', 'createdAt', 'updatedAt');
-  //         // 2) then call the database
-  //         return Note.findById(res.body.id);
-  //       })
-  //       // 3) then compare the API response to the database results
-  //       .then(data => {
-  //         expect(res.body.id).to.equal(data.id);
-  //         expect(res.body.title).to.equal(data.title);
-  //         expect(res.body.content).to.equal(data.content);
-  //         expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
-  //         expect(new Date(res.body.updatedAt)).to.eql(data.updatedAt);
-  //       });
-  //   });
+      let res;
+      // 1) First, call the API
+      return req('post', '/')
+        .send(newItem)
+        .then(function(_res) {
+          res = _res;
+          expect(res).to.have.status(201);
+          expect(res).to.have.header('location');
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          validateFields(res, expectedFields);
+          // 2) then call the database
+          return Note.findById(res.body.id);
+        })
+        // 3) then compare the API response to the database results
+        .then(data => {
+          expect(res.body.id).to.equal(data.id);
+          expect(res.body.title).to.equal(data.title);
+          expect(res.body.content).to.equal(data.content);
+          expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
+          expect(new Date(res.body.updatedAt)).to.eql(data.updatedAt);
+        });
+    });
 
-  //   it('should return an object with the expected fields', () => {
-  //     return req('post', '/')
-  //       .send({
-  //         title: 'Testing title here!',
-  //         content: 'Who needs it?'
-  //       })
-  //       .then(res => {
-  //         expect(res.body).to.be.an('object');
-  //         validateFields(res, expectedFields);
-  //       });
-  //   });
+    it('should reject requests with an invalid folderId',() => {
+      return req('post', '/')
+        .send({
+          title: 'Testing title here!',
+          content: 'Who needs it?',
+          folderId: 'faaaaake'
+        })
+        .then(res => {
+          expect(res).to.have.status(400);
+        });
+    });
 
-  //   it('should reject requests with an invalid folderId',() => {
-  //     return req('post', '/')
-  //       .send({
-  //         title: 'Testing title here!',
-  //         content: 'Who needs it?',
-  //         folderId: 'faaaaake'
-  //       })
-  //       .then(res => {
-  //         expect(res).to.have.status(400);
-  //       });
-  //   });
+    it('should reject requests with any invalid tags',() => {
+      return req('post', '/')
+        .send({
+          title: 'Testing title here!',
+          content: 'Who needs it?',
+          tags: ['222222222222222222222200', 'faaaaake']
+        })
+        .then(res => {
+          expect(res).to.have.status(400);
+        });
+    });
 
-  //   it('should require a title in the request body', () => {
-  //     return req('post', '/')
-  //       .send({
-  //         content: 'Who needs it?'
-  //       })
-  //       .then(res => {
-  //         expect(res).to.have.status(400);
-  //       });
-  //   });
+    it('should return a valid location header with new ID', () => {
+      req('post', '/')
+        .send({
+          title: 'Another test here',
+          content: 'Who needs it?'
+        })
+        .then(res => {
+          expect(res).to.have.header('Location', /\/api\/notes\/[0-9a-fA-F]{24}/);
+        });
+    });
 
-  //   it('should return a valid location header with new ID', () => {
-  //     req('post', '/')
-  //       .send({
-  //         title: 'Another test here',
-  //         content: 'Who needs it?'
-  //       })
-  //       .then(res => {
-  //         expect(res).to.have.header('Location', /\/api\/notes\/[0-9a-fA-F]{24}/);
-  //       });
-  //   });
-
-  // });
+  });
 
   // describe('PUT /api/notes/:id', () => {
 

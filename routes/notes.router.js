@@ -3,7 +3,7 @@ const router = express.Router();
 // Integrate mongoose
 const Note = require('../models/note');
 // Validation Middleware
-const { validateIds, validateFields, constructLocationHeader } = require('../utils/route-middleware');
+const { validateNoteId, validateFolderId, validateTagId, requireFields, constructLocationHeader } = require('../utils/route-middleware');
 
 // Helpers
 const constructNote = (fields, request) => {
@@ -17,7 +17,7 @@ const constructNote = (fields, request) => {
 };
 
 /* ========== GET/READ ALL ITEMS ========== */
-router.get('/', validateIds, (req, res, next) => {
+router.get('/', validateNoteId, (req, res, next) => {
   const {folderId, searchTerm, tagId} = req.query;
   // Add relevant filters to query
   let filter = {};
@@ -31,7 +31,7 @@ router.get('/', validateIds, (req, res, next) => {
 });
 
 /* ========== GET/READ A SINGLE ITEM ========== */
-router.get('/:id', validateIds, (req, res, next) => {
+router.get('/:id', validateNoteId, (req, res, next) => {
   const id = req.params.id;
   return Note.findById(id)
     .then(dbResponse => {
@@ -43,8 +43,8 @@ router.get('/:id', validateIds, (req, res, next) => {
 });
 
 /* ========== POST/CREATE AN ITEM ========== */
-router.post('/', validateIds, validateFields(['title']), (req, res, next) => {
-  const availableFields = ['title', 'content', 'folderId'];
+router.post('/', validateNoteId, validateFolderId, validateTagId, requireFields(['title']), (req, res, next) => {
+  const availableFields = ['title', 'content', 'folderId', 'tags'];
   // Construct the new note
   const newNote = constructNote(availableFields, req.body);
   return Note.create(newNote)
@@ -57,7 +57,7 @@ router.post('/', validateIds, validateFields(['title']), (req, res, next) => {
 });
 
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
-router.put('/:id', validateFields(['id']), validateIds, (req, res, next) => {
+router.put('/:id', requireFields(['id']), validateNoteId, (req, res, next) => {
   const id = req.params.id;
   // Validate that `id` matches ID in req.body
   if (!(id && req.body.id && id === req.body.id)) {
@@ -79,7 +79,7 @@ router.put('/:id', validateFields(['id']), validateIds, (req, res, next) => {
 });
 
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
-router.delete('/:id', validateIds, (req, res, next) => {
+router.delete('/:id', validateNoteId, (req, res, next) => {
   const id = req.params.id;
   return Note.findByIdAndDelete(id)
     .then(dbResponse => {
