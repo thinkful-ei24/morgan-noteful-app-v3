@@ -1,25 +1,23 @@
 const express = require('express');
 const router = express.Router();
 // Integrate mongoose
-const Folder = require('../models/folder');
+const Tag = require('../models/tag');
 const Note = require('../models/note');
 const { validateNoteId, requireFields, constructLocationHeader } = require('../utils/route-middleware');
 
 
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/', (req, res, next) => {
-  return Folder.find()
+  return Tag.find()
     .sort('name')
-    .then(dbRes => {
-      return res.status(200).json(dbRes);
-    })
+    .then(dbRes => res.status(200).json(dbRes))
     .catch(err => next(err));
 });
 
 /* ========== GET/READ A SINGLE ITEM ========== */
 router.get('/:id', validateNoteId, (req, res, next) => {
   const id = req.params.id;
-  return Folder.findById(id)
+  return Tag.findById(id)
     .then(dbRes => {
       if (!dbRes) return next();
       else return res.status(200).json(dbRes);
@@ -30,14 +28,14 @@ router.get('/:id', validateNoteId, (req, res, next) => {
 /* ========== POST/CREATE AN ITEM ========== */
 router.post('/', requireFields(['name']), (req, res, next) => {
   const newItem = {name: req.body.name};
-  return Folder.create(newItem)
+  return Tag.create(newItem)
     .then(dbRes => {
       if (!dbRes) throw new Error();
       else return res.status(201).location(constructLocationHeader(req, dbRes)).json(dbRes);
     })
     .catch(err => {
       if (err.code === 11000) {
-        const error = new Error(`Folder \`${newItem.name}\` already exists (name must be unique).`);
+        const error = new Error(`Tag \`${newItem.name}\` already exists (name must be unique).`);
         error.status = 400;
         return next(error);
       }
@@ -60,7 +58,7 @@ router.put('/:id', validateNoteId, requireFields(['id', 'name']), (req, res, nex
       item[field] = req.body[field];
     }
   }
-  return Folder.findByIdAndUpdate(id, item, {new: true})
+  return Tag.findByIdAndUpdate(id, item, {new: true})
     .then(dbRes => {
       if (!dbRes) return next();
       else return res.status(200).json(dbRes);
@@ -72,12 +70,12 @@ router.put('/:id', validateNoteId, requireFields(['id', 'name']), (req, res, nex
 router.delete('/:id', validateNoteId, (req, res, next) => {
   const id = req.params.id;
   // Delete folder from Folder DB
-  return Folder.findByIdAndDelete(id)
+  return Tag.findByIdAndDelete(id)
     .then((dbRes) => {
       if (!dbRes) return next();
-      else return Note.updateMany({folderId: id}, {$unset: {'folderId': ''}});
+      else return Note.updateMany({}, {$pull: {tags: id}});
     })
-    // Unset corresponding folderId from Note entries
+    // Unset corresponding tag from Note entries
     .then(dbRes => {
       if (!dbRes) return next();
       else return res.status(204).end();

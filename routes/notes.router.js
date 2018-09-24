@@ -3,7 +3,7 @@ const router = express.Router();
 // Integrate mongoose
 const Note = require('../models/note');
 // Validation Middleware
-const { validateId, validateFields, constructLocationHeader } = require('../utils/route-middleware');
+const { validateNoteId, validateFolderId, validateTagId, requireFields, constructLocationHeader } = require('../utils/route-middleware');
 
 // Helpers
 const constructNote = (fields, request) => {
@@ -17,18 +17,13 @@ const constructNote = (fields, request) => {
 };
 
 /* ========== GET/READ ALL ITEMS ========== */
-router.get('/', validateId, (req, res, next) => {
-  const {folderId, searchTerm} = req.query;
+router.get('/', validateNoteId, (req, res, next) => {
+  const {folderId, searchTerm, tagId} = req.query;
+  // Add relevant filters to query
   let filter = {};
-  if (folderId) {
-    filter.folderId = folderId;
-  }
-
-  if (searchTerm) {
-    filter.title = {
-      $regex: new RegExp(searchTerm, 'gi')
-    };
-  }
+  if (tagId) filter.tags = tagId;
+  if (folderId) filter.folderId = folderId;
+  if (searchTerm) filter.title = { $regex: new RegExp(searchTerm, 'gi') };
 
   return Note.find(filter).sort({ updatedAt: 'desc' })
     .then(dbResponse => res.status(200).json(dbResponse))
@@ -36,7 +31,7 @@ router.get('/', validateId, (req, res, next) => {
 });
 
 /* ========== GET/READ A SINGLE ITEM ========== */
-router.get('/:id', validateId, (req, res, next) => {
+router.get('/:id', validateNoteId, (req, res, next) => {
   const id = req.params.id;
   return Note.findById(id)
     .then(dbResponse => {
@@ -48,8 +43,8 @@ router.get('/:id', validateId, (req, res, next) => {
 });
 
 /* ========== POST/CREATE AN ITEM ========== */
-router.post('/', validateId, validateFields(['title']), (req, res, next) => {
-  const availableFields = ['title', 'content', 'folderId'];
+router.post('/', validateNoteId, validateFolderId, validateTagId, requireFields(['title']), (req, res, next) => {
+  const availableFields = ['title', 'content', 'folderId', 'tags'];
   // Construct the new note
   const newNote = constructNote(availableFields, req.body);
   return Note.create(newNote)
@@ -62,7 +57,7 @@ router.post('/', validateId, validateFields(['title']), (req, res, next) => {
 });
 
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
-router.put('/:id', validateFields(['id']), validateId, (req, res, next) => {
+router.put('/:id', requireFields(['id']), validateNoteId, validateTagId, validateFolderId, (req, res, next) => {
   const id = req.params.id;
   // Validate that `id` matches ID in req.body
   if (!(id && req.body.id && id === req.body.id)) {
@@ -70,10 +65,10 @@ router.put('/:id', validateFields(['id']), validateId, (req, res, next) => {
     err.status = 400;
     return next(err);
   }
-  const updateFields = ['title', 'content', 'folderId'];
+  const updateFields = ['title', 'content', 'folderId', 'tags'];
+  if (updateFields.tags === '') delete updateFields.tags;
   // Construct a note from updateFields
   const updatedNote = constructNote(updateFields, req.body);
-  // Validate ID and required fields. If correct, send request.
   return Note.findByIdAndUpdate(id, updatedNote, { new: true })
     .then(dbResponse => {
       // Send 404 if no dbResponse
@@ -84,7 +79,7 @@ router.put('/:id', validateFields(['id']), validateId, (req, res, next) => {
 });
 
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
-router.delete('/:id', validateId, (req, res, next) => {
+router.delete('/:id', validateNoteId, (req, res, next) => {
   const id = req.params.id;
   return Note.findByIdAndDelete(id)
     .then(dbResponse => {
