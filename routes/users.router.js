@@ -1,8 +1,8 @@
 const router = require('express').Router();
 const User = require('../models/user');
-const { requireFields, constructLocationHeader } = require('../utils/route-middleware');
+const { requireFields, validateUser, constructLocationHeader } = require('../utils/route-middleware');
 
-router.post('/users', requireFields(['fullName', 'username', 'password']), (req, res, next) => {
+router.post('/users', requireFields(['username', 'password'], 422), validateUser, (req, res, next) => {
   const { fullName, username, password } = req.body;
   const newUser = {
     fullName,
