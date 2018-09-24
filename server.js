@@ -2,14 +2,18 @@
 const express = require('express');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
+const passport = require('passport');
 // config
 const { PORT, MONGODB_URI } = require('./config');
+// auth strategies
+const localStrategy = require('./passport/local');
 
 // routers
 const notesRouter = require('./routes/notes.router');
 const foldersRouter = require('./routes/folders.router');
 const tagsRouter = require('./routes/tags.router');
 const usersRouter = require('./routes/users.router');
+const authRouter = require('./routes/auth.router');
 
 // Create an Express application
 const app = express();
@@ -25,7 +29,10 @@ app.use(express.static('public'));
 // Parse request body
 app.use(express.json());
 
+passport.use(localStrategy);
+
 // Mount routers
+app.use('/api', authRouter);
 app.use('/api', usersRouter);
 app.use('/api/notes', notesRouter);
 app.use('/api/folders', foldersRouter);
