@@ -57,7 +57,7 @@ router.post('/', validateNoteId, validateFolderId, validateTagId, requireFields(
 });
 
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
-router.put('/:id', requireFields(['id']), validateNoteId, (req, res, next) => {
+router.put('/:id', requireFields(['id']), validateNoteId, validateTagId, validateFolderId, (req, res, next) => {
   const id = req.params.id;
   // Validate that `id` matches ID in req.body
   if (!(id && req.body.id && id === req.body.id)) {
@@ -65,10 +65,10 @@ router.put('/:id', requireFields(['id']), validateNoteId, (req, res, next) => {
     err.status = 400;
     return next(err);
   }
-  const updateFields = ['title', 'content', 'folderId'];
+  if (req.body.folderId === '') delete req.body.folderId;
+  const updateFields = ['title', 'content', 'folderId', 'tags'];
   // Construct a note from updateFields
   const updatedNote = constructNote(updateFields, req.body);
-  // Validate ID and required fields. If correct, send request.
   return Note.findByIdAndUpdate(id, updatedNote, { new: true })
     .then(dbResponse => {
       // Send 404 if no dbResponse
