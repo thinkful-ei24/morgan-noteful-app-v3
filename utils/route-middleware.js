@@ -27,14 +27,16 @@ const validateFolderId = (req, res, next) => {
 };
 
 const validateTagId = (req, res, next) => {
-  const tagsLength = req.body.tags.length;
-  for (let i = 0; i < tagsLength; i++) {
-    const id = req.body.tags[i];
-    if (id) {
-      if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-        const err = new Error(`Invalid tag \`id\` parameter at index ${i}.`);
-        err.status = 400;
-        return next(err);
+  if (req.body.tags !== undefined) {
+    const tagsLength = req.body.tags.length || 0;
+    for (let i = 0; i < tagsLength; i++) {
+      const id = req.body.tags[i];
+      if (id) {
+        if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+          const err = new Error(`Invalid tag \`id\` parameter at index ${i}.`);
+          err.status = 400;
+          return next(err);
+        }
       }
     }
   }
