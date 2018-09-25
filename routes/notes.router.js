@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const passport = require('passport');
 // Integrate mongoose
 const Note = require('../models/note');
 // Validation Middleware
@@ -15,6 +16,9 @@ const constructNote = (fields, request) => {
   }
   return result;
 };
+
+// Protect endpoint
+router.use('/', passport.authenticate('jwt', { session: false, failWithError: true }));
 
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/', validateNoteId, (req, res, next) => {
