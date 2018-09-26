@@ -38,7 +38,8 @@ router.get('/', validateNoteId, (req, res, next) => {
 /* ========== GET/READ A SINGLE ITEM ========== */
 router.get('/:id', validateNoteId, (req, res, next) => {
   const id = req.params.id;
-  return Note.findById(id)
+  const userId = req.user.id;
+  return Note.findOne({userId, _id: id})
     .then(dbResponse => {
       // Verify that a result is returned (ID exists in DB)
       if (!dbResponse) return next();
