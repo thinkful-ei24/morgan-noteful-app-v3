@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 
 const folderSchema = new mongoose.Schema({
-  name: { type: String, required: true, unique: true }
+  userId: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+  name: { type: String, required: true }
 });
 
 folderSchema.set('timestamps', true);
@@ -14,5 +15,7 @@ folderSchema.set('toObject', {
     delete ret.__v;
   }
 });
+
+folderSchema.index({ name: 1, userId: 1}, { unique: true });
 
 module.exports = mongoose.model('Folder', folderSchema);
