@@ -10,7 +10,7 @@ const { validateNoteId, validateFolderId, validateTagId, requireFields, construc
 const constructNote = (fields, request) => {
   const body = request.body;
   const userId = request.user.id;
-  const result = {userId};
+  const result = { userId };
   for (const field of fields) {
     if (field in body) {
       result[field] = body[field];
@@ -89,7 +89,8 @@ router.put('/:id', requireFields(['id']), validateNoteId, validateTagId, validat
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
 router.delete('/:id', validateNoteId, (req, res, next) => {
   const id = req.params.id;
-  return Note.findByIdAndDelete(id)
+  const userId = req.user.id;
+  return Note.findOneAndDelete({ _id: id, userId })
     .then(dbResponse => {
       // Verify an item was deleted. If not, send 404.
       if (!dbResponse) return next();
