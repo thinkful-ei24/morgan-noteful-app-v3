@@ -8,10 +8,12 @@ const { validateNoteId, validateFolderId, validateTagId, requireFields, construc
 
 // Helpers
 const constructNote = (fields, request) => {
-  const result = {};
+  const body = request.body;
+  const userId = request.user.id;
+  const result = {userId};
   for (const field of fields) {
-    if (field in request) {
-      result[field] = request[field];
+    if (field in body) {
+      result[field] = body[field];
     }
   }
   return result;
@@ -52,7 +54,7 @@ router.get('/:id', validateNoteId, (req, res, next) => {
 router.post('/', validateNoteId, validateFolderId, validateTagId, requireFields(['title']), (req, res, next) => {
   const availableFields = ['title', 'content', 'folderId', 'tags'];
   // Construct the new note
-  const newNote = constructNote(availableFields, req.body);
+  const newNote = constructNote(availableFields, req);
   return Note.create(newNote)
     .then(dbResponse => {
       // Verify that a result is returned (otherwise throw 500 error)
@@ -74,7 +76,7 @@ router.put('/:id', requireFields(['id']), validateNoteId, validateTagId, validat
   const updateFields = ['title', 'content', 'folderId', 'tags'];
   if (updateFields.tags === '') delete updateFields.tags;
   // Construct a note from updateFields
-  const updatedNote = constructNote(updateFields, req.body);
+  const updatedNote = constructNote(updateFields, req);
   return Note.findByIdAndUpdate(id, updatedNote, { new: true })
     .then(dbResponse => {
       // Send 404 if no dbResponse
