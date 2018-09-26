@@ -1,10 +1,13 @@
 const express = require('express');
 const router = express.Router();
+const passport = require('passport');
 // Integrate mongoose
 const Tag = require('../models/tag');
 const Note = require('../models/note');
 const { validateNoteId, requireFields, constructLocationHeader } = require('../utils/route-middleware');
 
+// Protect endpoint
+router.use('/', passport.authenticate('jwt', { session: false, failWithError: true }));
 
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/', (req, res, next) => {
