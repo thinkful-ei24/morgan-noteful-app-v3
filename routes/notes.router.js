@@ -23,8 +23,9 @@ router.use('/', passport.authenticate('jwt', { session: false, failWithError: tr
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/', validateNoteId, (req, res, next) => {
   const {folderId, searchTerm, tagId} = req.query;
+  const userId = req.user.id;
   // Add relevant filters to query
-  let filter = {};
+  let filter = { userId };
   if (tagId) filter.tags = tagId;
   if (folderId) filter.folderId = folderId;
   if (searchTerm) filter.title = { $regex: new RegExp(searchTerm, 'gi') };
