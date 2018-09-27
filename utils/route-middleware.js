@@ -1,7 +1,7 @@
 const Folder = require('../models/folder');
 const Tag = require('../models/tag');
 
-const idIsValid = id => id.match(/^[0-9a-fA-F]{24}$/);
+const idIsValid = id => id ? id.match(/^[0-9a-fA-F]{24}$/) : false;
 
 const validateNoteId = (req, res, next) => {
   const possibleIds = [req.params.id, req.body.id];
@@ -19,12 +19,19 @@ const validateNoteId = (req, res, next) => {
 
 const validateFolderId = (req, res, next) => {
   const userId = req.user.id;
-  const id = req.body.folderId;
+  let id;
+  // Select correct ID depending on request type
+  if (req.method === 'GET' || req.method === 'DELETE') id = req.params.id;
+  else id = req.body.folderId;
+  // Step 1: Check if ID is syntactically valid
   if (!idIsValid(id)) {
     const err = new Error('Invalid `folderId` parameter.');
     err.status = 400;
     return next(err);
   }
+  // Skip step 2 validation if the request is redundant 
+  if (req.method === 'GET' || req.method === 'DELETE') return next();
+  // Step 2: Check to see folder exists in DB
   return Folder.find({ _id: id, userId }).count()
     .then(dbRes => {
       if (dbRes < 1) {
@@ -38,6 +45,7 @@ const validateFolderId = (req, res, next) => {
 };
 
 const validateTagId = (req, res, next) => {
+  if (req.body.tags === undefined) return next();
   // Make sure `tags` is an array
   if (!Array.isArray(req.body.tags)) {
     const err = new Error('`tags` must be an array');
@@ -55,6 +63,8 @@ const validateTagId = (req, res, next) => {
       return next(err);
     }
   }
+  // Skip step 2 validation if the request is redundant 
+  if (req.method === 'GET' || req.method === 'DELETE') return next();
   // Check to see if all tags being used exist
   const userId = req.user.id;
   return Tag.find({ _id: {$in: req.body.tags}, userId }).count()
@@ -67,6 +77,10 @@ const validateTagId = (req, res, next) => {
       else return next();
     })
     .catch(err => next(err));
+};
+
+const promisfy = (req, res, next) => {
+  
 };
 
 const validateUser = (req, res, next) => {

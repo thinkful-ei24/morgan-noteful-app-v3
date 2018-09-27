@@ -23,7 +23,7 @@ const constructNote = (fields, request) => {
 router.use('/', passport.authenticate('jwt', { session: false, failWithError: true }));
 
 /* ========== GET/READ ALL ITEMS ========== */
-router.get('/', validateNoteId, (req, res, next) => {
+router.get('/', (req, res, next) => {
   const {folderId, searchTerm, tagId} = req.query;
   const userId = req.user.id;
   // Add relevant filters to query
