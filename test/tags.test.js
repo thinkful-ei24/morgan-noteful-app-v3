@@ -9,9 +9,7 @@ const {
 
 const Tag = require('../models/tag');
 
-const {
-  tags
-} = require('../db/seed/tags');
+const { tags } = require('../db/data');
 
 const expect = chai.expect;
 chai.use(chaiHttp);

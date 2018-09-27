@@ -11,7 +11,7 @@ const Folder = require('../models/folder');
 
 const {
   folders
-} = require('../db/seed/folders');
+} = require('../db/data');
 
 const expect = chai.expect;
 chai.use(chaiHttp);

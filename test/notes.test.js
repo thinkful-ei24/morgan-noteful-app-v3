@@ -11,7 +11,7 @@ const Note = require('../models/note');
 
 const {
   notes
-} = require('../db/seed/notes');
+} = require('../db/data');
 
 const expect = chai.expect;
 chai.use(chaiHttp);
@@ -19,8 +19,8 @@ chai.use(chaiHttp);
 describe('Note Router Tests', () => {
   before(function() {
     return mongoose.connect(TEST_MONGODB_URI, {
-        useNewUrlParser: true
-      })
+      useNewUrlParser: true
+    })
       .then(() => mongoose.connection.db.dropDatabase());
   });
 
