@@ -8,6 +8,7 @@ router.post('/users', requireFields(['username', 'password'], 422), validateUser
   for (const field of possibleFields) {
     if (field in req.body) newUser[field] = req.body[field];
   }
+  newUser.fullname = newUser.fullname.trim();
   return User.hashPassword(newUser.password)
     .then(digest => {
       newUser.password = digest;

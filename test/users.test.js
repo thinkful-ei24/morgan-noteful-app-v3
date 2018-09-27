@@ -32,15 +32,18 @@ describe.only('Noteful API - Users', function () {
   after(function () {
     return mongoose.disconnect();
   });
+
+  const req = (method, endpoint = '/') => {
+    method = method.toLowerCase();
+    return chai.request(app)[method]('/api/users' + endpoint);
+  };
   
   describe.only('/api/users', function () {
     describe('POST', function () {
       it('Should create a new user', function () {
         const testUser = { username, password, fullname };
         let res;
-        return chai
-          .request(app)
-          .post('/api/users')
+        return req('post')
           .send(testUser)
           .then(_res => {
             res = _res;
@@ -66,25 +69,98 @@ describe.only('Noteful API - Users', function () {
       });
       it('Should reject users with missing username', function () {
         const testUser = { password, fullname };
-        return chai.request(app).post('/api/users').send(testUser)
+        return req('post')
+          .send(testUser)
           .then(res => {
-            expect.fail(null, null, 'Request with bad user should not succeed');
+            expect(res).to.have.status(422);
+          });
+      });
+      
+      it('Should reject users with missing password', () => {
+        const testUser = { fullname, username };
+        return req('post')
+          .send(testUser)
+          .then(res => {
+            expect(res).to.have.status(422);
           });
       });
 
-      /**
-       * COMPLETE ALL THE FOLLOWING TESTS
-       */
-      it('Should reject users with missing password');
-      it('Should reject users with non-string username');
-      it('Should reject users with non-string password');
-      it('Should reject users with non-trimmed username');
-      it('Should reject users with non-trimmed password');
-      it('Should reject users with empty username');
-      it('Should reject users with password less than 8 characters');
-      it('Should reject users with password greater than 72 characters');
-      it('Should reject users with duplicate username');
-      it('Should trim fullname');
+      it('Should reject users with non-string username', () => {
+        const testUser = { fullname, password, username: {hello: 'world'} };
+        return req('post')
+          .send(testUser)
+          .then(res => {
+            expect(res).to.have.status(400);
+          });
+      });
+
+      it('Should reject users with non-string password', () => {
+        const testUser = { fullname, username, password: {hello: 'world'} };
+        return req('post')
+          .send(testUser)
+          .then(res => {
+            expect(res).to.have.status(400);
+          });
+      });
+
+      it('Should reject users with non-trimmed username', () => {
+        const testUser = { fullname, password, username: ' userHere ' };
+        return req('post')
+          .send(testUser)
+          .then(res => {
+            expect(res).to.have.status(400);
+          });
+      });
+
+      it('Should reject users with non-trimmed password', () => {
+        const testUser = { fullname, username, password: ' hello!' };
+        return req('post')
+          .send(testUser)
+          .then(res => {
+            expect(res).to.have.status(400);
+          });
+      });
+
+      it('Should reject users with empty username', () => {
+        const testUser = { fullname, username: '', password };
+        return req('post')
+          .send(testUser)
+          .then(res => {
+            expect(res).to.have.status(400);
+          });
+      });
+
+      it('Should reject users with password less than 8 characters', () => {
+        const testUser = { fullname, username, password: '1234567' };
+        return req('post')
+          .send(testUser)
+          .then(res => {
+            expect(res).to.have.status(400);
+          });
+      });
+
+      it('Should reject users with password greater than 72 characters', () => {
+        const testUser = { fullname, username, password: 'hfjhfksdjhdfjkdfsjkhfdhskjfdkjsjkhfdhfdjksdjfkdskjfhkvbfskhvbjfhksjvbhfkekshbvsehvbfhesui4wrhbiubesbvgrukseyrnhrsyhruvhsksrebyseuvbryksvbryesukvbresyrksbukrsyvebrysvbyreusvyrksyervkusbrkvuse' };
+        return req('post')
+          .send(testUser)
+          .then(res => {
+            expect(res).to.have.status(400);
+          });
+      });
+
+      it('Should reject users with duplicate username', () => {
+        const testUser = { fullname, username, password };
+        return req('post').send(testUser)
+          .then(() => req('post').send(testUser))
+          .then(res => expect(res).to.have.status(400));
+      });
+
+      it('Should trim fullname', () => {
+        const testUser = { fullname: ' Morgan Freeman  ', username, password };
+        return req('post').send(testUser)
+          .then(res => expect(res.body.fullname).to.equal('Morgan Freeman'));
+      });
+
     });
   });
 });
