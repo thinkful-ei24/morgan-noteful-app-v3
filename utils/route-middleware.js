@@ -1,8 +1,13 @@
-const validateNoteId = (req, res, next) => {
+const Folder = require('../models/folder');
+const Tag = require('../models/tag');
+
+const idIsValid = id => id ? id.match(/^[0-9a-fA-F]{24}$/) : false;
+
+const validateId = (req, res, next) => {
   const possibleIds = [req.params.id, req.body.id];
   for (const id of possibleIds) {
     if (id) {
-      if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      if (!idIsValid(id)) {
         const err = new Error('Invalid `id` parameter.');
         err.status = 400;
         return next(err);
@@ -13,34 +18,62 @@ const validateNoteId = (req, res, next) => {
 };
 
 const validateFolderId = (req, res, next) => {
-  const possibleIds = [req.body.folderId];
-  for (const id of possibleIds) {
-    if (id) {
-      if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-        const err = new Error('Invalid `folderId` parameter.');
-        err.status = 400;
+  if (!req.body.folderId) return next();
+  const userId = req.user.id;
+  // Select correct ID depending on request type
+  const id = req.body.folderId;
+  // Step 1: Check if ID is syntactically valid
+  if (!idIsValid(id)) {
+    const err = new Error('Invalid `folderId` in request body.');
+    err.status = 400;
+    return next(err);
+  }
+  // Step 2: Check to see folder exists in DB
+  return Folder.find({ _id: id, userId }).count()
+    .then(dbRes => {
+      if (dbRes < 1) {
+        const err = new Error('`folderId` in request body does not exist.');
+        err.status = 404;
         return next(err);
       }
-    }
-  }
-  return next();
+      else return next();
+    })
+    .catch(err => next(err));
 };
 
 const validateTagId = (req, res, next) => {
-  if (req.body.tags !== undefined) {
-    const tagsLength = req.body.tags.length || 0;
-    for (let i = 0; i < tagsLength; i++) {
-      const id = req.body.tags[i];
-      if (id) {
-        if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-          const err = new Error(`Invalid tag \`id\` parameter at index ${i}.`);
-          err.status = 400;
-          return next(err);
-        }
-      }
+  if (req.body.tags === undefined) return next();
+  // Make sure `tags` is an array
+  if (!Array.isArray(req.body.tags)) {
+    const err = new Error('`tags` must be an array');
+    err.status = 400;
+    return next(err);
+  }
+  // Check to see if any tags need to be validated
+  const tagsLength = req.body.tags.length;
+  if (tagsLength === 0) return next();
+  // Check for valid tags
+  for (let i = 0; i < tagsLength; i++) {
+    if (!idIsValid(req.body.tags[i])) {
+      const err = new Error(`Invalid tag \`id\` parameter at index ${i}.`);
+      err.status = 400;
+      return next(err);
     }
   }
-  return next();
+  // Skip step 2 validation if the request is redundant 
+  if (req.method === 'GET' || req.method === 'DELETE') return next();
+  // Check to see if all tags being used exist
+  const userId = req.user.id;
+  return Tag.find({ _id: {$in: req.body.tags}, userId }).count()
+    .then(tagCount => {
+      if (tagCount !== tagsLength) {
+        const err = new Error('An id in `tags` does not exist.');
+        err.status = 404;
+        return next(err);
+      }
+      else return next();
+    })
+    .catch(err => next(err));
 };
 
 const validateUser = (req, res, next) => {
@@ -91,4 +124,4 @@ const constructLocationHeader = (req, res) => {
   return `${url}/${res.id}`;
 };
 
-module.exports = {requireFields, validateTagId, validateFolderId, validateNoteId, validateUser, constructLocationHeader};
+module.exports = {requireFields, validateTagId, validateFolderId, validateId, validateUser, constructLocationHeader};

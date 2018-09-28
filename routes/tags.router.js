@@ -4,23 +4,25 @@ const passport = require('passport');
 // Integrate mongoose
 const Tag = require('../models/tag');
 const Note = require('../models/note');
-const { validateNoteId, requireFields, constructLocationHeader } = require('../utils/route-middleware');
+const { validateId, requireFields, constructLocationHeader } = require('../utils/route-middleware');
 
 // Protect endpoint
 router.use('/', passport.authenticate('jwt', { session: false, failWithError: true }));
 
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/', (req, res, next) => {
-  return Tag.find()
+  const userId = req.user.id;
+  return Tag.find({ userId })
     .sort('name')
     .then(dbRes => res.status(200).json(dbRes))
     .catch(err => next(err));
 });
 
 /* ========== GET/READ A SINGLE ITEM ========== */
-router.get('/:id', validateNoteId, (req, res, next) => {
+router.get('/:id', validateId, (req, res, next) => {
   const id = req.params.id;
-  return Tag.findById(id)
+  const userId = req.user.id;
+  return Tag.findOne({ _id: id, userId })
     .then(dbRes => {
       if (!dbRes) return next();
       else return res.status(200).json(dbRes);
@@ -30,7 +32,8 @@ router.get('/:id', validateNoteId, (req, res, next) => {
 
 /* ========== POST/CREATE AN ITEM ========== */
 router.post('/', requireFields(['name']), (req, res, next) => {
-  const newItem = {name: req.body.name};
+  const userId = req.user.id;
+  const newItem = { name: req.body.name, userId};
   return Tag.create(newItem)
     .then(dbRes => {
       if (!dbRes) throw new Error();
@@ -47,21 +50,22 @@ router.post('/', requireFields(['name']), (req, res, next) => {
 });
 
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
-router.put('/:id', validateNoteId, requireFields(['id', 'name']), (req, res, next) => {
+router.put('/:id', validateId, requireFields(['id', 'name']), (req, res, next) => {
   const id = req.params.id;
-  const validFields = ['id', 'name'];
+  const userId = req.user.id;
   if (!(id && req.body.id && id === req.body.id)) {
     const err = new Error('Request body `id` and parameter `id` must be equivalent.');
     err.status = 400;
     return next(err);
   }
-  const item = {};
+  const item = { userId };
+  const validFields = ['id', 'name'];
   for (const field of validFields) {
     if (field in req.body) {
       item[field] = req.body[field];
     }
   }
-  return Tag.findByIdAndUpdate(id, item, {new: true})
+  return Tag.findOneAndUpdate({ _id: id, userId }, item, {new: true})
     .then(dbRes => {
       if (!dbRes) return next();
       else return res.status(200).json(dbRes);
@@ -70,13 +74,14 @@ router.put('/:id', validateNoteId, requireFields(['id', 'name']), (req, res, nex
 });
 
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
-router.delete('/:id', validateNoteId, (req, res, next) => {
+router.delete('/:id', validateId, (req, res, next) => {
   const id = req.params.id;
+  const userId = req.user.id;
   // Delete folder from Folder DB
-  return Tag.findByIdAndDelete(id)
+  return Tag.findOneAndDelete({ _id: id, userId })
     .then((dbRes) => {
       if (!dbRes) return next();
-      else return Note.updateMany({}, {$pull: {tags: id}});
+      else return Note.updateMany({ userId }, {$pull: {tags: id}});
     })
     // Unset corresponding tag from Note entries
     .then(dbRes => {

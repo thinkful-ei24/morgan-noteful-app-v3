@@ -164,7 +164,6 @@ const noteful = (function () {
     });
   }
 
-
   function handleNoteFormSubmit() {
     $('.js-note-edit-form').on('submit', function (event) {
       event.preventDefault();
