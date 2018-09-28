@@ -4,7 +4,7 @@ const passport = require('passport');
 // Integrate mongoose
 const Note = require('../models/note');
 // Validation Middleware
-const { validateNoteId, validateFolderId, validateTagId, requireFields, constructLocationHeader } = require('../utils/route-middleware');
+const { validateId, validateFolderId, validateTagId, requireFields, constructLocationHeader } = require('../utils/route-middleware');
 
 // Helpers
 const constructNote = (fields, request) => {
@@ -38,7 +38,7 @@ router.get('/', (req, res, next) => {
 });
 
 /* ========== GET/READ A SINGLE ITEM ========== */
-router.get('/:id', validateNoteId, (req, res, next) => {
+router.get('/:id', validateId, (req, res, next) => {
   const id = req.params.id;
   const userId = req.user.id;
   return Note.findOne({userId, _id: id})
@@ -51,7 +51,7 @@ router.get('/:id', validateNoteId, (req, res, next) => {
 });
 
 /* ========== POST/CREATE AN ITEM ========== */
-router.post('/', validateNoteId, validateFolderId, validateTagId, requireFields(['title']), (req, res, next) => {
+router.post('/', validateId, validateFolderId, validateTagId, requireFields(['title']), (req, res, next) => {
   const availableFields = ['title', 'content', 'folderId', 'tags'];
   // Construct the new note
   const newNote = constructNote(availableFields, req);
@@ -65,7 +65,7 @@ router.post('/', validateNoteId, validateFolderId, validateTagId, requireFields(
 });
 
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
-router.put('/:id', requireFields(['id']), validateNoteId, validateTagId, validateFolderId, (req, res, next) => {
+router.put('/:id', requireFields(['id']), validateId, validateTagId, validateFolderId, (req, res, next) => {
   const id = req.params.id;
   // Validate that `id` matches ID in req.body
   if (!(id && req.body.id && id === req.body.id)) {
@@ -87,7 +87,7 @@ router.put('/:id', requireFields(['id']), validateNoteId, validateTagId, validat
 });
 
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
-router.delete('/:id', validateNoteId, (req, res, next) => {
+router.delete('/:id', validateId, (req, res, next) => {
   const id = req.params.id;
   const userId = req.user.id;
   return Note.findOneAndDelete({ _id: id, userId })

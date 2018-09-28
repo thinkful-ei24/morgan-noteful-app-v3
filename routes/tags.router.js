@@ -4,7 +4,7 @@ const passport = require('passport');
 // Integrate mongoose
 const Tag = require('../models/tag');
 const Note = require('../models/note');
-const { validateNoteId, requireFields, constructLocationHeader } = require('../utils/route-middleware');
+const { validateId, requireFields, constructLocationHeader } = require('../utils/route-middleware');
 
 // Protect endpoint
 router.use('/', passport.authenticate('jwt', { session: false, failWithError: true }));
@@ -19,7 +19,7 @@ router.get('/', (req, res, next) => {
 });
 
 /* ========== GET/READ A SINGLE ITEM ========== */
-router.get('/:id', validateNoteId, (req, res, next) => {
+router.get('/:id', validateId, (req, res, next) => {
   const id = req.params.id;
   const userId = req.user.id;
   return Tag.findOne({ _id: id, userId })
@@ -50,7 +50,7 @@ router.post('/', requireFields(['name']), (req, res, next) => {
 });
 
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
-router.put('/:id', validateNoteId, requireFields(['id', 'name']), (req, res, next) => {
+router.put('/:id', validateId, requireFields(['id', 'name']), (req, res, next) => {
   const id = req.params.id;
   const userId = req.user.id;
   if (!(id && req.body.id && id === req.body.id)) {
@@ -74,7 +74,7 @@ router.put('/:id', validateNoteId, requireFields(['id', 'name']), (req, res, nex
 });
 
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
-router.delete('/:id', validateNoteId, (req, res, next) => {
+router.delete('/:id', validateId, (req, res, next) => {
   const id = req.params.id;
   const userId = req.user.id;
   // Delete folder from Folder DB
