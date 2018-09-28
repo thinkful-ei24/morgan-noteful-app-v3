@@ -2,7 +2,6 @@ const app = require('../server');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const mongoose = require('mongoose');
-
 const { TEST_MONGODB_URI } = require('../config');
 
 const User = require('../models/user');
@@ -11,7 +10,7 @@ const expect = chai.expect;
 
 chai.use(chaiHttp);
 
-describe.only('Noteful API - Users', function () {
+describe('Noteful API - Users', function () {
   const username = 'exampleUser';
   const password = 'examplePass';
   const fullname = 'Example User';
@@ -38,7 +37,7 @@ describe.only('Noteful API - Users', function () {
     return chai.request(app)[method]('/api/users' + endpoint);
   };
   
-  describe.only('/api/users', function () {
+  describe('/api/users', function () {
     describe('POST', function () {
       it('Should create a new user', function () {
         const testUser = { username, password, fullname };

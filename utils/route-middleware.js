@@ -18,6 +18,7 @@ const validateId = (req, res, next) => {
 };
 
 const validateFolderId = (req, res, next) => {
+  if (!req.body.folderId) return next();
   const userId = req.user.id;
   // Select correct ID depending on request type
   const id = req.body.folderId;
